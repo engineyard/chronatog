@@ -44,7 +44,10 @@ EOT
     customer.compliment_generators << generator
     #TODO: Actually create the generator
     headers 'Location' => generator.url
-    generator.as_json.to_json
+    {
+      :provisioned_service => generator.as_json,
+      :message => Message.new('status', generator.created_message).as_json
+    }.to_json
   end
 
   class ComplimentGenerator < Struct.new(:id, :api_key, :url)
@@ -57,6 +60,9 @@ EOT
           "CIA_BACKDOOR_PASSWORD" => "toast"
         }
       }
+    end
+    def created_message
+      "Compliment Generator Generated!"
     end
   end
 
