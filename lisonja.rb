@@ -1,6 +1,7 @@
 require 'sinatra'
 require 'rest-client'
 require 'json'
+require 'yaml'
 
 class Lisonja < Sinatra::Base
   enable :raise_errors
@@ -9,7 +10,8 @@ class Lisonja < Sinatra::Base
 
   get "/" do
     if @@service_url
-      "I am Lisonja, I think you're swell. (registered as #{@@service_url})"
+      "I am Lisonja, I think you're swell. (registered as #{@@service_url}) " +
+      "current customer info: <pre>#{@@customers_hash.to_yaml}</pre>"
     else
 <<-EOT
   Register this service:
@@ -23,7 +25,6 @@ EOT
   end
   
   post "/register" do
-    puts "register from #{params.inspect}"
     Lisonja.create_service(params[:service_registration_url])
     redirect "/"
   end
@@ -43,11 +44,11 @@ EOT
     customer.compliment_generators << generator
     #TODO: Actually create the generator
     headers 'Location' => generator.url
-    generator.to_json
+    generator.as_json.to_json
   end
 
   class ComplimentGenerator < Struct.new(:id, :api_key, :url)
-    def as_json(*args)
+    def as_json
       {
         :url => url,
         :configuration_url => nil, #meaning, no configuration possible
@@ -60,7 +61,7 @@ EOT
   end
 
   class Customer < Struct.new(:id, :name, :api_url, :messages_url, :invoices_url, :url)
-    def as_json(*args)
+    def as_json
       {
         :url => url,
         :configuration_required => false,
@@ -91,7 +92,7 @@ EOT
                   "#{ENV["URL_FOR_LISONJA"]}/api/1/customers/#{next_id}")
     @@customers_hash[next_id.to_s] = customer
     headers 'Location' => customer.url
-    customer.to_json
+    customer.as_json.to_json
   end
 
   def self.reset!
