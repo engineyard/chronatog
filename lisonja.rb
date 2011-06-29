@@ -69,17 +69,24 @@ EOT
         :provisioned_services_url  => "#{url}/compliment_generators"
       }
     end
+    def singup_message
+      "You enabled Lisonja. Well done #{name}!"
+    end
     def compliment_generators
       @compliment_generators ||= []
     end
   end
+  
+  class Message < Struct.new(:message_type, :subject, :body)
+    def as_json
+      {
+        :message_type => message_type,
+        :subject => subject,
+        :body => body
+      }
+    end
+  end
 
-  # post_params = {
-  #    name:         name,
-  #    url:          url,
-  #    messages_url: messages_url,
-  #    invoices_url: invoices_url
-  #  }
   post '/api/1/customers' do
     params = JSON.parse(request.body.read)
     next_id = @@customer_count += 1
@@ -92,7 +99,10 @@ EOT
                   "#{ENV["URL_FOR_LISONJA"]}/api/1/customers/#{next_id}")
     @@customers_hash[next_id.to_s] = customer
     headers 'Location' => customer.url
-    customer.as_json.to_json
+    {
+      :service_account => customer.as_json,
+      :message => Message.new('status', customer.singup_message).as_json
+    }.to_json
   end
 
   def self.reset!
