@@ -28,6 +28,9 @@ class Lisonja < Sinatra::Base
 EOT
     end
     to_output += "current customer info: <pre>#{@@customers_hash.to_yaml}</pre>"
+    @@customers_hash.values.each do |customer|
+      to_output += "<a href='/customers/#{customer.id}'>#{customer.name}</a>"
+    end
     to_output
   end
 
@@ -51,7 +54,11 @@ EOT
     %li
       - message_url = "/customers/" + @customer.id.to_s + "/compliment_generators/" + g.id.to_s + "/generate"
       %form{:action=>message_url, :method=>'POST'}
-        %input{:value=>'Send compliment.', :type=>'submit'}
+        %select{:name => 'message_type'}
+          %option{:value => 'alert'} Alert
+          %option{:value => 'notification'} Notification
+          %option{:value => 'status'} Status
+        %input{:value=>'Compliment the Customer', :type=>'submit'}
 EOT
   end
   
@@ -85,7 +92,8 @@ EOT
     customer = @@customers_hash[customer_id.to_s]
     generator = customer.compliment_generators.detect{|g| g.id.to_s == generator_id.to_s}
     generated = generator.generate_compliment!
-    redirect "/customers/#{customer.id}?message=#{generated}"
+    customer.send_compliment(params[:message_type], generated)
+    redirect "/customers/#{customer.id}?message=#{URI.escape(generated)}"
   end
 
   post "/api/1/customers/:customer_id/compliment_generators" do |customer_id|
@@ -147,6 +155,11 @@ EOT
       generator = ComplimentGenerator.generate(id, messages_url)
       self.compliment_generators << generator
       generator
+    end
+    def send_compliment(message_type, compliment)
+      message = Message.new(message_type, compliment, nil)
+      RestClient.post(self.messages_url, {:message => message.as_json}.to_json, :content_type => :json,
+          :accept => :json, :user_agent => "Lisonja")
     end
     def self.create(customers_hash, name, url = nil, messages_url = nil, invoices_url = nil)
       @@customer_count ||= 0

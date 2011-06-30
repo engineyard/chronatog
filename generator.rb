@@ -37,12 +37,18 @@ class PartiallyStolenComplimentGenerator
   PREFIX_A = ["You have a",'I think you have a'] + PREFIX_ANY
   PREFIX_AN = ["You have an",'I think you have an'] + PREFIX_ANY
 
+  def self.log
+    @log ||= []
+  end
+
   def self.run!
     noun = NOUN.rand
     adj1 = ADJ1.rand
     adj2 = ADJ2.rand
     prefix = VOWELS.include?(adj1.chars.first) ? PREFIX_AN.rand : PREFIX_A.rand
-    "#{prefix} #{adj1} #{adj2} #{noun}"
+    generated = "#{prefix} #{adj1} #{adj2} #{noun}"
+    log << generated
+    generated
   end
   
 end
