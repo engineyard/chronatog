@@ -49,16 +49,13 @@ EOT
 - if @recent_message
   %strong Sent:
   = @recent_message
-%ul
-  - @customer.compliment_generators.each do |g|
-    %li
-      - message_url = "/customers/" + @customer.id.to_s + "/compliment_generators/" + g.id.to_s + "/generate"
-      %form{:action=>message_url, :method=>'POST'}
-        %select{:name => 'message_type'}
-          %option{:value => 'alert'} Alert
-          %option{:value => 'notification'} Notification
-          %option{:value => 'status'} Status
-        %input{:value=>'Compliment the Customer', :type=>'submit'}
+- message_url = "/customers/" + @customer.id.to_s + "/generate_compliment"
+%form{:action=>message_url, :method=>'POST'}
+  %select{:name => 'message_type'}
+    %option{:value => 'alert'} Alert
+    %option{:value => 'notification'} Notification
+    %option{:value => 'status'} Status
+  %input{:value=>'Compliment the Customer', :type=>'submit'}
 EOT
   end
   
@@ -87,14 +84,22 @@ EOT
       halt 404, 'nonesuch customer'
     end
   end
-  
-  post "/customers/:customer_id/compliment_generators/:generator_id/generate" do |customer_id, generator_id|
+
+  post "/customers/:customer_id/generate_compliment" do |customer_id|
     customer = @@customers_hash[customer_id.to_s]
-    generator = customer.compliment_generators.detect{|g| g.id.to_s == generator_id.to_s}
+    generator = ComplimentGenerator.generate(customer_id, "TODO messages url...?")
     generated = generator.generate_compliment!
     customer.send_compliment(params[:message_type], generated)
     redirect "/customers/#{customer.id}?message=#{URI.escape(generated)}"
   end
+
+  # post "/customers/:customer_id/compliment_generators/:generator_id/generate" do |customer_id, generator_id|
+  #   customer = @@customers_hash[customer_id.to_s]
+  #   generator = customer.compliment_generators.detect{|g| g.id.to_s == generator_id.to_s}
+  #   generated = generator.generate_compliment!
+  #   customer.send_compliment(params[:message_type], generated)
+  #   redirect "/customers/#{customer.id}?message=#{URI.escape(generated)}"
+  # end
 
   post "/api/1/customers/:customer_id/compliment_generators" do |customer_id|
     params = JSON.parse(request.body.read)
