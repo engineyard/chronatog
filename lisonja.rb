@@ -43,7 +43,7 @@ EOT
     "Agree to our terms, or else..."
   end
 
-  template :generators do
+  template :customer do
 <<-EOT
 %h1= @customer.name + " (" + @customer.id.to_s + ") "
 - if @recent_message
@@ -56,30 +56,34 @@ EOT
     %option{:value => 'notification'} Notification
     %option{:value => 'status'} Status
   %input{:value=>'Compliment the Customer', :type=>'submit'}
+%h2 Generators:
+- @customer.compliment_generators.each do |compliment_generator|
+  %a{:href => '/customers/'+@customer.id.to_s+'/generators/'+compliment_generator.id.to_s}
+    = compliment_generator.name
 EOT
   end
-  
-  template :customers do
-<<-EOT
-%h1= Customers
-%ul
-  - @@customers_hash.values.each do |customer|
-    %li
-      %a{:href=>customer.url}
-        = customer.name + " (" + customer.id + ")"
-EOT
-    
-  end
-  
-  get "customers" do
-    haml customers
-  end
+
+#   template :customers do
+# <<-EOT
+# %h1= Customers
+# %ul
+#   - @@customers_hash.values.each do |customer|
+#     %li
+#       %a{:href=>customer.url}
+#         = customer.name + " (" + customer.id + ")"
+# EOT
+#     
+#   end
+# 
+#   get "customers" do
+#     haml :customers
+#   end
 
   get "/customers/:customer_id" do |customer_id|
     @customer = @@customers_hash[customer_id.to_s]
     @recent_message = params[:message]
     if @customer
-      haml :generators
+      haml :customer
     else
       halt 404, 'nonesuch customer'
     end
@@ -105,7 +109,7 @@ EOT
     params = JSON.parse(request.body.read)
     customer = @@customers_hash[customer_id.to_s]
     #TODO: find a way to make the generator different depending on app or env (for benefit of example)
-    generator = customer.generate_generator(params[:messages_url])
+    generator = customer.generate_generator(params["environment"]["name"], params['messages_url'])
     headers 'Location' => generator.url
     {
       :provisioned_service => generator.as_json,
@@ -123,6 +127,9 @@ EOT
           "CIA_BACKDOOR_PASSWORD" => "toast"
         }
       }
+    end
+    def name
+      "TODO store name of environment"
     end
     def created_message
       "Compliment Generator Generated!"
