@@ -49,8 +49,7 @@ EOT
 - if @recent_message
   %strong Sent:
   = @recent_message
-- message_url = "/customers/" + @customer.id.to_s + "/generate_compliment"
-%form{:action=>message_url, :method=>'POST'}
+%form{:action=>"/customers/"+@customer.id.to_s+"/generate_compliment", :method=>'POST'}
   %select{:name => 'message_type'}
     %option{:value => 'alert'} Alert
     %option{:value => 'notification'} Notification
@@ -61,6 +60,10 @@ EOT
   %a{:href => '/customers/'+@customer.id.to_s+'/generators/'+compliment_generator.id.to_s}
     = compliment_generator.name
 EOT
+  end
+
+  template :generator do
+    
   end
 
 #   template :customers do
@@ -79,6 +82,13 @@ EOT
 #     haml :customers
 #   end
 
+  get "/customers/:customer_id/generators/:generator_id" do |customer_id, generator_id|
+    @customer = @@customers_hash[customer_id.to_s]
+    @generator = @customer.compliment_generators.detect{|g| g.id == generator_id}
+    @recent_message = params[:message]
+    haml :generator
+  end
+
   get "/customers/:customer_id" do |customer_id|
     @customer = @@customers_hash[customer_id.to_s]
     @recent_message = params[:message]
@@ -91,7 +101,8 @@ EOT
 
   post "/customers/:customer_id/generate_compliment" do |customer_id|
     customer = @@customers_hash[customer_id.to_s]
-    generator = ComplimentGenerator.generate(customer_id, "TODO messages url...?")
+    #TODO: 1 main generator for complimenting all customers, instead of gen new one each time?
+    generator = ComplimentGenerator.generate(customer_id, nil, "TODO messages url...?")
     generated = generator.generate_compliment!
     customer.send_compliment(params[:message_type], generated)
     redirect "/customers/#{customer.id}?message=#{URI.escape(generated)}"
@@ -117,7 +128,7 @@ EOT
     }.to_json
   end
 
-  class ComplimentGenerator < Struct.new(:id, :api_key, :messages_url, :url)
+  class ComplimentGenerator < Struct.new(:id, :name, :api_key, :messages_url, :url)
     def as_json
       {
         :url => url,
@@ -128,20 +139,18 @@ EOT
         }
       }
     end
-    def name
-      "TODO store name of environment"
-    end
     def created_message
       "Compliment Generator Generated!"
     end
     def generate_compliment!
       Lisonja.compliment_source.run!
     end
-    def self.generate(customer_id, messages_url)
+    def self.generate(customer_id, name, messages_url)
       @@generators_count ||= 0
       next_id = @@generators_count += 1
       ComplimentGenerator.new(
         next_id, 
+        name,
         rand.to_s[2,10], 
         messages_url,
         "#{ENV["URL_FOR_LISONJA"]}/api/1/customers/#{customer_id}/compliment_generators/#{next_id}")
@@ -163,8 +172,8 @@ EOT
     def compliment_generators
       @compliment_generators ||= []
     end
-    def generate_generator(messages_url = nil)
-      generator = ComplimentGenerator.generate(id, messages_url)
+    def generate_generator(env_name = nil, messages_url = nil)
+      generator = ComplimentGenerator.generate(id, env_name, messages_url)
       self.compliment_generators << generator
       generator
     end
