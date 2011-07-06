@@ -16,7 +16,8 @@ class Lisonja < Sinatra::Base
   get "/" do
     to_output = ""
     if @@service_url
-      to_output += "I am Lisonja, I think you're swell. (registered as #{@@service_url}) "
+      to_output += "I am Lisonja, I think you're swell. (registered as #{@@service_url}) <br/>"
+      to_output += "<a href='/cron'>run billing cron</a> <br/>"
     else
       to_output += <<-EOT
   Register this service:
@@ -32,6 +33,16 @@ EOT
       to_output += "<a href='/customers/#{customer.id}'>#{customer.name}</a>"
     end
     to_output
+  end
+
+  get "/cron" do
+    invoices_billed = []
+    @@customers_hash.values.each do |customer|
+      if billed_info = customer.bill!
+        invoices_billed << billed_info
+      end
+    end
+    "Just billed: #{invoices_billed.to_yaml}"
   end
 
   post "/register" do
@@ -129,6 +140,10 @@ EOT
   end
 
   class ComplimentGenerator < Struct.new(:id, :name, :api_key, :messages_url, :url)
+    def initialize(*args)
+      super(*args)
+      @created_at = Time.now
+    end
     def as_json
       {
         :url => url,
@@ -155,9 +170,19 @@ EOT
         messages_url,
         "#{ENV["URL_FOR_LISONJA"]}/api/1/customers/#{customer_id}/compliment_generators/#{next_id}")
     end
+    def get_billable_usage!(at_time)
+      last_billed_at = @last_billed_at || @created_at
+      to_return = (at_time.to_i - last_billed_at.to_i)
+      @last_billed_at = at_time
+      to_return
+    end
   end
 
   class Customer < Struct.new(:id, :name, :api_url, :messages_url, :invoices_url, :url)
+    def initialize(*args)
+      super(*args)
+      @created_at = Time.now
+    end
     def as_json
       {
         :url => url,
@@ -191,8 +216,46 @@ EOT
       customers_hash[customer.id.to_s] = customer
       customer
     end
+    def bill!
+      last_billed_at = @last_billed_at || @created_at
+      billing_at = Time.now
+      #this service costs $0.01 per minute
+      total_price = 1 * (billing_at.to_i - last_billed_at.to_i) / 60
+      compliment_generators.each do |g|
+        usage_seconds = g.get_billable_usage!(billing_at)
+        #compliment generators costs $0.02 per second
+        usage_price = usage_seconds * 2
+        total_price += usage_price
+      end
+      if total_price > 0
+        #TODO: charge per compliment generator?
+        invoice_params = {
+          :invoice => {
+            :total_amount_cents => total_price,
+            :line_item_description => "For service from #{last_billed_at} to #{billing_at}"
+          }
+        }
+        response = RestClient.post(
+                            invoices_url,
+                            invoice_params.to_json,
+                            :content_type => :json,
+                            :accept => :json, :user_agent => "Lisonja")
+        response_data = JSON.parse(response.body)
+        #TODO: do something with the response?
+        @last_billed_at = billing_at
+        #return info about charges made
+        invoice_params
+      else
+        #return no charge made
+        nil
+      end
+    end
+    def cancel!
+      bill!
+      @compliment_generators = []
+    end
   end
-  
+
   class Message < Struct.new(:message_type, :subject, :body)
     def as_json
       {
@@ -216,6 +279,13 @@ EOT
       :service_account => customer.as_json,
       :message => Message.new('status', customer.singup_message).as_json
     }.to_json
+  end
+
+  delete "/api/1/customers/:customer_id" do |customer_id|
+    @customer = @@customers_hash[customer_id.to_s]
+    @customer.cancel!
+    @@customers_hash.delete(customer_id.to_s)
+    {}.to_json
   end
 
   def self.reset!
