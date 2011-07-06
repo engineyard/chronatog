@@ -74,30 +74,32 @@ EOT
   end
 
   template :generator do
-    
+<<-EOT
+%h1= @generator.name + " (" + @generator.id.to_s + ") "
+- if @recent_message
+  %strong Sent:
+  = @recent_message
+%form{:action=>"/customers/"+@customer.id.to_s+"/generators/"+@generator.id.to_s+"/generate_compliment", :method=>'POST'}
+  %select{:name => 'message_type'}
+    %option{:value => 'alert'} Alert
+    %option{:value => 'notification'} Notification
+    %option{:value => 'status'} Status
+  %input{:value=>'Compliment the App Deployment', :type=>'submit'}
+EOT
   end
-
-#   template :customers do
-# <<-EOT
-# %h1= Customers
-# %ul
-#   - @@customers_hash.values.each do |customer|
-#     %li
-#       %a{:href=>customer.url}
-#         = customer.name + " (" + customer.id + ")"
-# EOT
-#     
-#   end
-# 
-#   get "customers" do
-#     haml :customers
-#   end
 
   get "/customers/:customer_id/generators/:generator_id" do |customer_id, generator_id|
     @customer = @@customers_hash[customer_id.to_s]
-    @generator = @customer.compliment_generators.detect{|g| g.id == generator_id}
+    @generator = @customer.compliment_generators.detect{|g| g.id.to_s == generator_id.to_s}
     @recent_message = params[:message]
     haml :generator
+  end
+
+  post "/customers/:customer_id/generators/:generator_id/generate_compliment" do |customer_id, generator_id|
+    @customer = @@customers_hash[customer_id.to_s]
+    @generator = @customer.compliment_generators.detect{|g| g.id.to_s == generator_id.to_s}
+    generated = @generator.generate_and_send_compliment(params[:message_type])
+    redirect "/customers/#{customer_id}/generators/#{generator_id}?message=#{URI.escape(generated)}"
   end
 
   get "/customers/:customer_id" do |customer_id|
@@ -169,6 +171,13 @@ EOT
         rand.to_s[2,10], 
         messages_url,
         "#{ENV["URL_FOR_LISONJA"]}/api/1/customers/#{customer_id}/compliment_generators/#{next_id}")
+    end
+    def generate_and_send_compliment(message_type)
+      compliment = generate_compliment!
+      message = Message.new(message_type, compliment, nil)
+      RestClient.post(self.messages_url, {:message => message.as_json}.to_json, :content_type => :json,
+          :accept => :json, :user_agent => "Lisonja")
+      compliment
     end
     def get_billable_usage!(at_time)
       last_billed_at = @last_billed_at || @created_at
