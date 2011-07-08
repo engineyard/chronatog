@@ -241,7 +241,8 @@ EOT
         invoice_params = {
           :invoice => {
             :total_amount_cents => total_price,
-            :line_item_description => "For service from #{last_billed_at} to #{billing_at}"
+            :line_item_description => "For service from #{last_billed_at} to #{billing_at}, "+
+                                      "includes #{compliment_generators.size} compliment generators."
           }
         }
         response = RestClient.post(
