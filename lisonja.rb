@@ -15,19 +15,35 @@ class Lisonja < Sinatra::Base
 
   get "/" do
     to_output = ""
-    if @@service_url
-      to_output += "I am Lisonja, I think you're swell. (registered as #{@@service_url}) <br/>"
-      to_output += "<a href='/cron'>run billing cron</a> <br/>"
-    else
+    if !@@services["regular"]
       to_output += <<-EOT
-  Register this service:
-    <form action="/register" method="POST">
-      <label for="service_registration_url">Service Registration API URL</label>
-      <input id="service_registration_url" name="service_registration_url" type="text" />
-      <input value="Register" type="submit" />
-    </form>
-EOT
+        <div id="basic">
+        Register the Regular Lisonja service:<br/>
+          <form action="/register" method="POST">
+            <label for="service_registration_url">Service Registration API URL</label>
+            <input id="service_registration_url" name="service_registration_url" type="text" />
+            <input value="Register" type="submit" />
+          </form>
+        </div>
+      EOT
+    else
+      to_output += "Regular lisona registered as #{@@services["regular"][:service_url]} <br/>"
     end
+    if !@@services["fancy"]
+      to_output += <<-EOT
+        <div id="configured">
+        Register the Highly Configured Fancy Lisonja service:<br/>
+          <form action="/registerfancy" method="POST">
+            <label for="service_registration_url">Service Registration API URL</label>
+            <input id="service_registration_url" name="service_registration_url" type="text" />
+            <input value="Register" type="submit" />
+          </form>
+        </div>
+      EOT
+    else
+      to_output += "Fancy lisona registered as #{@@services["fancy"][:service_url]} <br/>"
+    end
+    to_output += "<a href='/cron'>run billing cron</a> <br/>"
     to_output += "current customer info: <pre>#{@@customers_hash.to_yaml}</pre>"
     @@customers_hash.values.each do |customer|
       to_output += "<a href='/customers/#{customer.id}'>#{customer.name}</a>"
@@ -46,7 +62,12 @@ EOT
   end
 
   post "/register" do
-    Lisonja.create_service(params[:service_registration_url])
+    Lisonja.create_service("regular", params[:service_registration_url])
+    redirect "/"
+  end
+
+  post "/registerfancy" do
+    Lisonja.create_service("fancy", params[:service_registration_url])
     redirect "/"
   end
 
@@ -276,7 +297,7 @@ EOT
     end
   end
 
-  post '/api/1/customers' do
+  post '/api/1/customers/:service_name' do |service_name|
     params = JSON.parse(request.body.read)
     customer = Customer.create(
                   @@customers_hash,
@@ -299,7 +320,7 @@ EOT
   end
 
   def self.reset!
-    @@service_url = nil
+    @@services = {}
     @@customers_hash = {}
   end
   def self.seed_data
@@ -308,31 +329,29 @@ EOT
     Customer.create(@@customers_hash, "Pedro").generate_generator
   end
 
-  def self.create_service(service_registration_url)
-    unless @@service_url
-      service_creation_params = {
-        :service =>
-        {
-          :name =>                     "Lisonja",
-          :description =>              "my compliments to the devops",
-          :service_accounts_url =>     "#{ENV["URL_FOR_LISONJA"]}/api/1/customers",
-          :home_url =>                 "#{ENV["URL_FOR_LISONJA"]}/",
-          :terms_and_conditions_url => "#{ENV["URL_FOR_LISONJA"]}/terms",
-          :vars => [
-              "COMPLIMENTS_API_KEY",
-              "CIA_BACKDOOR_PASSWORD"
-          ]
-        }
+  def self.create_service(service_name, service_registration_url)
+    service_creation_params = {
+      :service =>
+      {
+        :name =>                     "Lisonja",
+        :description =>              "my compliments to the devops",
+        :service_accounts_url =>     "#{ENV["URL_FOR_LISONJA"]}/api/1/customers/#{service_name}",
+        :home_url =>                 "#{ENV["URL_FOR_LISONJA"]}/",
+        :terms_and_conditions_url => "#{ENV["URL_FOR_LISONJA"]}/terms",
+        :vars => [
+            "COMPLIMENTS_API_KEY",
+            "CIA_BACKDOOR_PASSWORD"
+        ]
       }
-      response = RestClient.post(
-                          service_registration_url,
-                          service_creation_params.to_json,
-                          :content_type => :json,
-                          :accept => :json, :user_agent => "Lisonja")
-      response_data = JSON.parse(response.body)
-      @@service_url = response.headers[:location]
-    end
-    @@service_url
+    }
+    response = RestClient.post(
+                        service_registration_url,
+                        service_creation_params.to_json,
+                        :content_type => :json,
+                        :accept => :json, :user_agent => "Lisonja")
+    response_data = JSON.parse(response.body)
+    @@services[service_name] = {}
+    @@services[service_name][:service_url] = response.headers[:location]
   end
 
   def self.customers
