@@ -62,12 +62,12 @@ class Lisonja < Sinatra::Base
   end
 
   post "/register" do
-    Lisonja.create_service("regular", params[:service_registration_url])
+    Lisonja.create_service("Lisonja", "regular", params[:service_registration_url])
     redirect "/"
   end
 
   post "/registerfancy" do
-    Lisonja.create_service("fancy", params[:service_registration_url])
+    Lisonja.create_service("Lisonja-Configured", "fancy", params[:service_registration_url])
     redirect "/"
   end
 
@@ -155,6 +155,7 @@ EOT
     customer = @@customers_hash[customer_id.to_s]
     #TODO: find a way to make the generator different depending on app or env (for benefit of example)
     generator = customer.generate_generator(params["environment"]["name"], params['messages_url'])
+    content_type :json
     headers 'Location' => generator.url
     {
       :provisioned_service => generator.as_json,
@@ -208,18 +209,28 @@ EOT
     end
   end
 
-  class Customer < Struct.new(:id, :name, :api_url, :messages_url, :invoices_url, :url)
+  class Customer < Struct.new(:id, :service_kind, :name, :api_url, :messages_url, :invoices_url)
     def initialize(*args)
       super(*args)
       @created_at = Time.now
     end
+    def url
+      "#{ENV["URL_FOR_LISONJA"]}/api/1/customers/#{id}"
+    end
     def as_json
-      {
+      to_return = {
         :url => url,
         :configuration_required => false,
         :configuration_url  => nil, #meaning, no configuration possible
         :provisioned_services_url  => "#{url}/compliment_generators"
       }
+      if service_kind == "fancy"
+        to_return.merge!(
+          :configuration_required => true,
+          :configuration_url => "#{ENV["URL_FOR_LISONJA"]}/sso/customers/#{id}"
+        )
+      end
+      to_return
     end
     def singup_message
       "You enabled Lisonja. Well done #{name}!"
@@ -237,12 +248,11 @@ EOT
       RestClient.post(self.messages_url, {:message => message.as_json}.to_json, :content_type => :json,
           :accept => :json, :user_agent => "Lisonja")
     end
-    def self.create(customers_hash, name, url = nil, messages_url = nil, invoices_url = nil)
+    def self.create(customers_hash, service_kind, name, api_url = nil, messages_url = nil, invoices_url = nil)
       @@customer_count ||= 0
       next_id = @@customer_count += 1
       customer = Customer.new(
-                    next_id, name, url, messages_url, invoices_url,
-                    "#{ENV["URL_FOR_LISONJA"]}/api/1/customers/#{next_id}")
+                    next_id, service_kind, name, api_url, messages_url, invoices_url)
       customers_hash[customer.id.to_s] = customer
       customer
     end
@@ -297,25 +307,29 @@ EOT
     end
   end
 
-  post '/api/1/customers/:service_name' do |service_name|
+  post '/api/1/customers/:service_kind' do |service_kind|
     params = JSON.parse(request.body.read)
     customer = Customer.create(
                   @@customers_hash,
+                  service_kind,
                   params['name'], 
                   params['url'], 
                   params['messages_url'], 
                   params['invoices_url'])
+    content_type :json
     headers 'Location' => customer.url
-    {
+    to_return = {
       :service_account => customer.as_json,
       :message => Message.new('status', customer.singup_message).as_json
-    }.to_json
+    }
+    to_return.to_json
   end
 
   delete "/api/1/customers/:customer_id" do |customer_id|
     @customer = @@customers_hash[customer_id.to_s]
     @customer.cancel!
     @@customers_hash.delete(customer_id.to_s)
+    content_type :json
     {}.to_json
   end
 
@@ -329,13 +343,13 @@ EOT
     Customer.create(@@customers_hash, "Pedro").generate_generator
   end
 
-  def self.create_service(service_name, service_registration_url)
+  def self.create_service(service_name, service_kind, service_registration_url)
     service_creation_params = {
       :service =>
       {
-        :name =>                     "Lisonja",
+        :name =>                     service_name,
         :description =>              "my compliments to the devops",
-        :service_accounts_url =>     "#{ENV["URL_FOR_LISONJA"]}/api/1/customers/#{service_name}",
+        :service_accounts_url =>     "#{ENV["URL_FOR_LISONJA"]}/api/1/customers/#{service_kind}",
         :home_url =>                 "#{ENV["URL_FOR_LISONJA"]}/",
         :terms_and_conditions_url => "#{ENV["URL_FOR_LISONJA"]}/terms",
         :vars => [
@@ -350,8 +364,8 @@ EOT
                         :content_type => :json,
                         :accept => :json, :user_agent => "Lisonja")
     response_data = JSON.parse(response.body)
-    @@services[service_name] = {}
-    @@services[service_name][:service_url] = response.headers[:location]
+    @@services[service_kind] = {}
+    @@services[service_kind][:service_url] = response.headers[:location]
   end
 
   def self.customers
