@@ -163,6 +163,30 @@ EOT
     }.to_json
   end
 
+  get "/sso/customers/:customer_id" do |customer_id|
+    @customer = @@customers_hash[customer_id.to_s]
+    @redirect_to = params[:redirect_to]
+    haml :plans
+  end
+
+  post "/sso/customers/:customer_id/choose_plan" do |customer_id|
+    @customer = @@customers_hash[customer_id.to_s]
+    Plan.create(customer_id, params[:plan_type])
+    Message.send_message(@customer.messages_url, :status, "#{params[:plan_type]} Activated!")
+    redirect params[:redirect_to]
+  end
+
+  template :plans do
+    # %form{:action=> ENV["URL_FOR_LISONJA"] + "/sso/customers/"+@customer.id.to_s+"/choose_plan", :method=>'POST'}
+<<-EOT
+%form{:action=> "/sso/customers/"+@customer.id.to_s+"/choose_plan", :method=>'POST'}
+  %input{:name => "redirect_to", :value => @redirect_to, :type => "hidden"}
+  %select{:name => 'plan_type'}
+    %option{:value => 'baller plan'} baller plan
+  %input{:value=>'Continue', :type=>'submit'}
+EOT
+  end
+
   class ComplimentGenerator < Struct.new(:id, :name, :api_key, :messages_url, :url)
     def initialize(*args)
       super(*args)
@@ -197,8 +221,7 @@ EOT
     def generate_and_send_compliment(message_type)
       compliment = generate_compliment!
       message = Message.new(message_type, compliment, nil)
-      RestClient.post(self.messages_url, {:message => message.as_json}.to_json, :content_type => :json,
-          :accept => :json, :user_agent => "Lisonja")
+      message.send_message(self.messages_url)
       compliment
     end
     def get_billable_usage!(at_time)
@@ -206,6 +229,39 @@ EOT
       to_return = (at_time.to_i - last_billed_at.to_i)
       @last_billed_at = at_time
       to_return
+    end
+  end
+
+  class Plan < Struct.new(:id, :customer_id, :type)
+    def initialize(*args)
+      super(*args)
+      @created_at = Time.now
+    end
+
+    def as_json
+      {
+        :id => id,
+        :type => type
+      }
+    end
+
+    def self.get(id)
+      @@plans[id]
+    end
+
+    def self.reset!
+      @@plan_count = 0
+      @@plans = {}
+    end
+
+    def self.plans
+      @@plans ||= {}
+    end
+
+    def self.create(customer_id, type)
+      @@plan_count ||= 0
+      next_id = @@plan_count += 1
+      plans[next_id] = Plan.new(next_id, customer_id, type)
     end
   end
 
@@ -245,8 +301,7 @@ EOT
     end
     def send_compliment(message_type, compliment)
       message = Message.new(message_type, compliment, nil)
-      RestClient.post(self.messages_url, {:message => message.as_json}.to_json, :content_type => :json,
-          :accept => :json, :user_agent => "Lisonja")
+      message.send_message(self.messages_url)
     end
     def self.create(customers_hash, service_kind, name, api_url = nil, messages_url = nil, invoices_url = nil)
       @@customer_count ||= 0
@@ -305,6 +360,14 @@ EOT
         :body => body
       }
     end
+    def send_message(messages_url)
+      RestClient.post(messages_url, {:message => as_json}.to_json, :content_type => :json,
+        :accept => :json, :user_agent => "Lisonja")
+    end
+
+    def self.send_message(to, message_type, subject, body=nil)
+      Message.new(message_type, subject, body).send_message(to)
+    end
   end
 
   post '/api/1/customers/:service_kind' do |service_kind|
@@ -336,6 +399,7 @@ EOT
   def self.reset!
     @@services = {}
     @@customers_hash = {}
+    Plan.reset!
   end
   def self.seed_data
     Customer.create(@@customers_hash, "barbara").generate_generator
