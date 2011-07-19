@@ -136,7 +136,7 @@ EOT
   post "/customers/:customer_id/generate_compliment" do |customer_id|
     customer = @@customers_hash[customer_id.to_s]
     #TODO: 1 main generator for complimenting all customers, instead of gen new one each time?
-    generator = ComplimentGenerator.generate(customer_id, nil, "TODO messages url...?")
+    generator = ComplimentGenerator.generate(customer_id, "regular", nil, "TODO messages url...?")
     generated = generator.generate_compliment!
     customer.send_compliment(params[:message_type], generated)
     redirect "/customers/#{customer.id}?message=#{URI.escape(generated)}"
@@ -169,16 +169,9 @@ EOT
     haml :plans
   end
 
-  post "/sso/customers/:customer_id/choose_plan" do |customer_id|
-    @customer = @@customers_hash[customer_id.to_s]
-    Plan.create(customer_id, params[:plan_type])
-    Message.send_message(@customer.messages_url, :status, "#{params[:plan_type]} Activated!")
-    redirect params[:redirect_to]
-  end
-
   template :plans do
-    # %form{:action=> ENV["URL_FOR_LISONJA"] + "/sso/customers/"+@customer.id.to_s+"/choose_plan", :method=>'POST'}
 <<-EOT
+%h2 Select a plan
 %form{:action=> "/sso/customers/"+@customer.id.to_s+"/choose_plan", :method=>'POST'}
   %input{:name => "redirect_to", :value => @redirect_to, :type => "hidden"}
   %select{:name => 'plan_type'}
@@ -187,20 +180,72 @@ EOT
 EOT
   end
 
-  class ComplimentGenerator < Struct.new(:id, :name, :api_key, :messages_url, :url)
+  post "/sso/customers/:customer_id/choose_plan" do |customer_id|
+    @customer = @@customers_hash[customer_id.to_s]
+    @customer.plan_type = params[:plan_type]
+    Message.send_message(@customer.messages_url, :status, "#{params[:plan_type]} Activated!")
+    redirect params[:redirect_to]
+  end
+  
+  get "/sso/customers/:customer_id/generators/:generator_id" do |customer_id, generator_id|
+    @customer = @@customers_hash[customer_id.to_s]
+    @generator = @customer.compliment_generators.detect{ |g| g.id.to_s == generator_id.to_s }
+    @redirect_to = params[:redirect_to]
+    haml :generators
+  end
+  
+  template :generators do
+<<-EOT
+%h2 Select a generator type
+%form{:action=> "/sso/customers/"+@customer.id.to_s+"/generators/"+@generator.id.to_s+"/choose_type", :method=>'POST'}
+  %input{:name => "redirect_to", :value => @redirect_to, :type => "hidden"}
+  %select{:name => 'generator_type'}
+    %option{:value => 'best compliments'} best compliments
+  %input{:value=>'Continue', :type=>'submit'}
+EOT
+  end
+
+  post "/sso/customers/:customer_id/generators/:generator_id/choose_type" do |customer_id, generator_id|
+    @customer = @@customers_hash[customer_id.to_s]
+    @generator = @customer.compliment_generators.detect{ |g| g.id.to_s == generator_id.to_s }
+    @generator.generator_type = params[:generator_type]
+    Message.send_message(@generator.messages_url, :status, "#{params[:generator_type]} now available for #{@generator.name}")
+    redirect params[:redirect_to]
+  end
+
+
+  class ComplimentGenerator < Struct.new(:id, :service_kind, :name, :api_key, :messages_url, :customer_id, :generator_type)
     def initialize(*args)
       super(*args)
       @created_at = Time.now
     end
+    def url
+      "#{ENV["URL_FOR_LISONJA"]}/api/1/customers/#{customer_id}/compliment_generators/#{id}"
+    end
+    def configuration_url
+      "#{ENV["URL_FOR_LISONJA"]}/sso/customers/#{customer_id}/generators/#{id}"
+    end
     def as_json
-      {
-        :url => url,
-        :configuration_url => nil, #meaning, no configuration possible
-        :vars => {
-          "COMPLIMENTS_API_KEY" => api_key,
-          "CIA_BACKDOOR_PASSWORD" => "toast"
+      if service_kind == "fancy"
+        {
+          :url => url,
+          :configuration_url => configuration_url,
+          :configuration_required => true,
+          :vars => {
+            "COMPLIMENTS_API_KEY" => api_key,
+            "CIA_BACKDOOR_PASSWORD" => "toast"
+          }
         }
-      }
+      else
+        {
+          :url => url,
+          :configuration_url => nil, #meaning, no configuration possible
+          :vars => {
+            "COMPLIMENTS_API_KEY" => api_key,
+            "CIA_BACKDOOR_PASSWORD" => "toast"
+          }
+        }
+      end
     end
     def created_message
       "Compliment Generator Generated!"
@@ -208,15 +253,17 @@ EOT
     def generate_compliment!
       Lisonja.compliment_source.run!
     end
-    def self.generate(customer_id, name, messages_url)
+    def self.generate(customer_id, service_kind, name, messages_url)
       @@generators_count ||= 0
       next_id = @@generators_count += 1
       ComplimentGenerator.new(
         next_id, 
+        service_kind,
         name,
         rand.to_s[2,10], 
         messages_url,
-        "#{ENV["URL_FOR_LISONJA"]}/api/1/customers/#{customer_id}/compliment_generators/#{next_id}")
+        customer_id,
+        "default")
     end
     def generate_and_send_compliment(message_type)
       compliment = generate_compliment!
@@ -232,40 +279,7 @@ EOT
     end
   end
 
-  class Plan < Struct.new(:id, :customer_id, :type)
-    def initialize(*args)
-      super(*args)
-      @created_at = Time.now
-    end
-
-    def as_json
-      {
-        :id => id,
-        :type => type
-      }
-    end
-
-    def self.get(id)
-      @@plans[id]
-    end
-
-    def self.reset!
-      @@plan_count = 0
-      @@plans = {}
-    end
-
-    def self.plans
-      @@plans ||= {}
-    end
-
-    def self.create(customer_id, type)
-      @@plan_count ||= 0
-      next_id = @@plan_count += 1
-      plans[next_id] = Plan.new(next_id, customer_id, type)
-    end
-  end
-
-  class Customer < Struct.new(:id, :service_kind, :name, :api_url, :messages_url, :invoices_url)
+  class Customer < Struct.new(:id, :service_kind, :name, :api_url, :messages_url, :invoices_url, :plan_type)
     def initialize(*args)
       super(*args)
       @created_at = Time.now
@@ -295,7 +309,7 @@ EOT
       @compliment_generators ||= []
     end
     def generate_generator(env_name = nil, messages_url = nil)
-      generator = ComplimentGenerator.generate(id, env_name, messages_url)
+      generator = ComplimentGenerator.generate(id, service_kind, env_name, messages_url)
       self.compliment_generators << generator
       generator
     end
@@ -307,7 +321,7 @@ EOT
       @@customer_count ||= 0
       next_id = @@customer_count += 1
       customer = Customer.new(
-                    next_id, service_kind, name, api_url, messages_url, invoices_url)
+                    next_id, service_kind, name, api_url, messages_url, invoices_url, "default")
       customers_hash[customer.id.to_s] = customer
       customer
     end
@@ -399,7 +413,6 @@ EOT
   def self.reset!
     @@services = {}
     @@customers_hash = {}
-    Plan.reset!
   end
   def self.seed_data
     Customer.create(@@customers_hash, "barbara").generate_generator
