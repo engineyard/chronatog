@@ -3,6 +3,7 @@ require 'rest-client'
 require 'json'
 require 'yaml'
 require 'haml'
+require 'ey_api_hmac'
 
 class Lisonja < Sinatra::Base
   enable :raise_errors
@@ -22,6 +23,10 @@ class Lisonja < Sinatra::Base
           <form action="/register" method="POST">
             <label for="service_registration_url">Service Registration API URL</label>
             <input id="service_registration_url" name="service_registration_url" type="text" />
+            
+            <label for="api_secret">API Secret</label>
+            <input id="api_secret" name="api_secret" type="text" />
+            
             <input value="Register" type="submit" />
           </form>
         </div>
@@ -36,6 +41,10 @@ class Lisonja < Sinatra::Base
           <form action="/registerfancy" method="POST">
             <label for="service_registration_url">Service Registration API URL</label>
             <input id="service_registration_url" name="service_registration_url" type="text" />
+            
+            <label for="api_secret">API Secret</label>
+            <input id="api_secret" name="api_secret" type="text" />
+            
             <input value="Register" type="submit" />
           </form>
         </div>
@@ -62,12 +71,12 @@ class Lisonja < Sinatra::Base
   end
 
   post "/register" do
-    Lisonja.create_service("Lisonja", "regular", params[:service_registration_url])
+    Lisonja.create_service("Lisonja", "regular", params[:service_registration_url], params[:api_secret])
     redirect "/"
   end
 
   post "/registerfancy" do
-    Lisonja.create_service("Lisonja-Configured", "fancy", params[:service_registration_url])
+    Lisonja.create_service("Lisonja-Configured", "fancy", params[:service_registration_url], params[:api_secret])
     redirect "/"
   end
 
@@ -164,8 +173,10 @@ EOT
   end
 
   get "/sso/customers/:customer_id" do |customer_id|
+    #TODO: a better way to know we are using the 'fancy' service
+    raise "Signature invalid" unless EY::ApiHMAC.verify_for_sso(request.url, Lisonja.services["fancy"][:api_secret])
     @customer = @@customers_hash[customer_id.to_s]
-    @redirect_to = params[:redirect_to]
+    @redirect_to = params[:ey_return_to_url]
     haml :plans
   end
 
@@ -173,7 +184,7 @@ EOT
 <<-EOT
 %h2 Select a plan
 %form{:action=> "/sso/customers/"+@customer.id.to_s+"/choose_plan", :method=>'POST'}
-  %input{:name => "redirect_to", :value => @redirect_to, :type => "hidden"}
+  %input{:name => "ey_return_to_url", :value => @redirect_to, :type => "hidden"}
   %select{:name => 'plan_type'}
     %option{:value => 'baller plan'} baller plan
   %input{:value=>'Continue', :type=>'submit'}
@@ -184,13 +195,16 @@ EOT
     @customer = @@customers_hash[customer_id.to_s]
     @customer.plan_type = params[:plan_type]
     Message.send_message(@customer.messages_url, :status, "#{params[:plan_type]} Activated!")
-    redirect params[:redirect_to]
+    redirect params[:ey_return_to_url]
   end
   
   get "/sso/customers/:customer_id/generators/:generator_id" do |customer_id, generator_id|
+    #TODO: a better way to know we are using the 'fancy' service
+    #TODO: turn on verifying again when signature is using correct secret..
+    # raise "Signature invalid" unless EY::ApiHMAC.verify_for_sso(request.url, Lisonja.services["fancy"][:api_secret])
     @customer = @@customers_hash[customer_id.to_s]
     @generator = @customer.compliment_generators.detect{ |g| g.id.to_s == generator_id.to_s }
-    @redirect_to = params[:redirect_to]
+    @redirect_to = params[:ey_return_to_url]
     haml :generators
   end
   
@@ -198,7 +212,7 @@ EOT
 <<-EOT
 %h2 Select a generator type
 %form{:action=> "/sso/customers/"+@customer.id.to_s+"/generators/"+@generator.id.to_s+"/choose_type", :method=>'POST'}
-  %input{:name => "redirect_to", :value => @redirect_to, :type => "hidden"}
+  %input{:name => "ey_return_to_url", :value => @redirect_to, :type => "hidden"}
   %select{:name => 'generator_type'}
     %option{:value => 'best compliments'} best compliments
   %input{:value=>'Continue', :type=>'submit'}
@@ -210,7 +224,7 @@ EOT
     @generator = @customer.compliment_generators.detect{ |g| g.id.to_s == generator_id.to_s }
     @generator.generator_type = params[:generator_type]
     Message.send_message(@generator.messages_url, :status, "#{params[:generator_type]} now available for #{@generator.name}")
-    redirect params[:redirect_to]
+    redirect params[:ey_return_to_url]
   end
 
 
@@ -420,7 +434,7 @@ EOT
     Customer.create(@@customers_hash, "Pedro").generate_generator
   end
 
-  def self.create_service(service_name, service_kind, service_registration_url)
+  def self.create_service(service_name, service_kind, service_registration_url, api_secret)
     service_creation_params = {
       :service =>
       {
@@ -435,6 +449,8 @@ EOT
         ]
       }
     }
+    # RackClient.register_middleware(HMACAutho, api_secret)
+    # RackClient.post
     response = RestClient.post(
                         service_registration_url,
                         service_creation_params.to_json,
@@ -442,11 +458,15 @@ EOT
                         :accept => :json, :user_agent => "Lisonja")
     response_data = JSON.parse(response.body)
     @@services[service_kind] = {}
+    @@services[service_kind][:api_secret] = api_secret
     @@services[service_kind][:service_url] = response.headers[:location]
   end
 
   def self.customers
     @@customers_hash.values
+  end
+  def self.services
+    @@services
   end
 
 end
