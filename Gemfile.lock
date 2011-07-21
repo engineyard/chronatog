@@ -1,3 +1,14 @@
+PATH
+  remote: ../../vendor/ey_api_hmac
+  specs:
+    ey_api_hmac (0.0.1)
+
+PATH
+  remote: ../../vendor/ey_services_api_internal
+  specs:
+    ey_services_api_internal (0.0.1)
+      rest-client
+
 GEM
   remote: http://rubygems.org/
   specs:
@@ -16,6 +27,8 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
+  ey_api_hmac!
+  ey_services_api_internal!
   haml
   json
   rest-client

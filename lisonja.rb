@@ -71,12 +71,12 @@ class Lisonja < Sinatra::Base
   end
 
   post "/register" do
-    Lisonja.create_service("Lisonja", "regular", params[:service_registration_url], params[:api_secret])
+    Lisonja.register_regular_service(params[:service_registration_url], params[:api_secret])
     redirect "/"
   end
 
   post "/registerfancy" do
-    Lisonja.create_service("Lisonja-Configured", "fancy", params[:service_registration_url], params[:api_secret])
+    Lisonja.register_fancy_service(params[:service_registration_url], params[:api_secret])
     redirect "/"
   end
 
@@ -434,6 +434,14 @@ EOT
     Customer.create(@@customers_hash, "Pedro").generate_generator
   end
 
+  def self.register_regular_service(service_registration_url, api_secret)
+    create_service("Lisonja", "regular", service_registration_url, api_secret)
+  end
+
+  def self.register_fancy_service(service_registration_url, api_secret)
+    create_service("Lisonja-Configured", "fancy", service_registration_url, api_secret)
+  end
+
   def self.create_service(service_name, service_kind, service_registration_url, api_secret)
     service_creation_params = {
       :service =>
@@ -460,6 +468,10 @@ EOT
     @@services[service_kind] = {}
     @@services[service_kind][:api_secret] = api_secret
     @@services[service_kind][:service_url] = response.headers[:location]
+    Service.new(service_name, service_kind, @@services[service_kind][:service_url], @@services[service_kind][:api_secret])
+  end
+
+  class Service < Struct.new(:name, :service_kind, :service_url, :api_secret)
   end
 
   def self.customers
