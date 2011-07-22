@@ -443,6 +443,81 @@ EOT
   end
 
   def self.create_service(service_name, service_kind, service_registration_url, api_secret)
+    engine_yard = EY::ServicesAPI::Connection(service_registration_url, api_secret)
+    
+    service = engine_yard.register_service(
+      :name => service_name, 
+      :description => "my compliments to the devops", 
+      :service_accounts_url =>     "#{ENV["URL_FOR_LISONJA"]}/api/1/customers/#{service_kind}",
+      :home_url =>                 "#{ENV["URL_FOR_LISONJA"]}/",
+      :terms_and_conditions_url => "#{ENV["URL_FOR_LISONJA"]}/terms",
+      :vars => [
+        "COMPLIMENTS_API_KEY",
+        "CIA_BACKDOOR_PASSWORD"
+      ]
+    )
+    
+    service_yaml = service.to_yaml
+    EY::ServicesAPI::Service.load_from_yaml(service_yaml)
+    
+
+    # service = EY::ServicesAPI::Service.new(service_name, "my compliments to the devops")
+    #     service.urls = {
+    #       :service_accounts_url =>     "#{ENV["URL_FOR_LISONJA"]}/api/1/customers/#{service_kind}",
+    #       :home_url =>                 "#{ENV["URL_FOR_LISONJA"]}/",
+    #       :terms_and_conditions_url => "#{ENV["URL_FOR_LISONJA"]}/terms",
+    #     }
+    #     service.vars = [
+    #       "COMPLIMENTS_API_KEY",
+    #       "CIA_BACKDOOR_PASSWORD"
+    #     ]
+    # 
+    #     EY::ServicesAPI.register_service(service_name, 
+    #       service_registration_url, 
+    #       api_secret, 
+    #       "my compliments to the devops", 
+    #         :service_accounts_url =>     "#{ENV["URL_FOR_LISONJA"]}/api/1/customers/#{service_kind}",
+    #         :home_url =>                 "#{ENV["URL_FOR_LISONJA"]}/",
+    #         :terms_and_conditions_url => "#{ENV["URL_FOR_LISONJA"]}/terms",
+    #         :vars => [
+    #           "COMPLIMENTS_API_KEY",
+    #           "CIA_BACKDOOR_PASSWORD"
+    #         ]
+    #     )
+    # 
+    #     EY::ServicesAPI.register_service(
+    #         :name => service_name, 
+    #         :service_registration_url => service_registration_url, 
+    #         :api_secret => api_secret, 
+    #         :description => "my compliments to the devops", 
+    #         :service_accounts_url =>     "#{ENV["URL_FOR_LISONJA"]}/api/1/customers/#{service_kind}",
+    #         :home_url =>                 "#{ENV["URL_FOR_LISONJA"]}/",
+    #         :terms_and_conditions_url => "#{ENV["URL_FOR_LISONJA"]}/terms",
+    #         :vars => [
+    #           "COMPLIMENTS_API_KEY",
+    #           "CIA_BACKDOOR_PASSWORD"
+    #         ]
+    #     )
+    # 
+    # 
+    # 
+    # 
+    #     service = EY::ServicesAPI::Service.create(
+    #         :name => service_name, 
+    #         :service_registration_url => service_registration_url, 
+    #         :api_secret => api_secret, 
+    #         :description => "my compliments to the devops", 
+    #         :service_accounts_url =>     "#{ENV["URL_FOR_LISONJA"]}/api/1/customers/#{service_kind}",
+    #         :home_url =>                 "#{ENV["URL_FOR_LISONJA"]}/",
+    #         :terms_and_conditions_url => "#{ENV["URL_FOR_LISONJA"]}/terms",
+    #         :vars => [
+    #           "COMPLIMENTS_API_KEY",
+    #           "CIA_BACKDOOR_PASSWORD"
+    #         ]
+    #     )
+
+
+
     service_creation_params = {
       :service =>
       {
