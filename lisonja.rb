@@ -4,6 +4,7 @@ require 'json'
 require 'yaml'
 require 'haml'
 require 'ey_api_hmac'
+require 'ey_services_api'
 
 class Lisonja < Sinatra::Base
   enable :raise_errors
@@ -398,22 +399,81 @@ EOT
     end
   end
 
+
+  # if service_kind == "fancy"
+  #   {
+  #     :url => url,
+  #     :configuration_url => configuration_url,
+  #     :configuration_required => true,
+  #     :vars => {
+  #       "COMPLIMENTS_API_KEY" => api_key,
+  #       "CIA_BACKDOOR_PASSWORD" => "toast"
+  #     }
+  #   }
+  # else
+  #   {
+  #     :url => url,
+  #     :configuration_url => nil, #meaning, no configuration possible
+  #     :vars => {
+  #       "COMPLIMENTS_API_KEY" => api_key,
+  #       "CIA_BACKDOOR_PASSWORD" => "toast"
+  #     }
+  #   }
+  # end
+
   post '/api/1/customers/:service_kind' do |service_kind|
-    params = JSON.parse(request.body.read)
-    customer = Customer.create(
-                  @@customers_hash,
-                  service_kind,
-                  params['name'], 
-                  params['url'], 
-                  params['messages_url'], 
-                  params['invoices_url'])
+    #parse the request
+    service_account = ServiceAccount.create_from_request(request.body.read)
+
+    #do local persistence
+    customer = Customer.create(@@customers_hash, service_kind, service_account.name, service_account.url, service_account.messages_url, service_account.invoices_url)
+
+    #sinatra stuff
     content_type :json
     headers 'Location' => customer.url
-    to_return = {
-      :service_account => customer.as_json,
-      :message => Message.new('status', customer.singup_message).as_json
-    }
-    to_return.to_json
+
+    service_account.vars = customer.vars
+
+    #response with json about self
+    service_account.creation_response_json do |presenter|
+      if service_kind == "fancy"
+        presenter.configuration_required = true
+        presenter.configuration_url = customer.configuration_url
+      end
+      presenter.status_message = StatusMessage.new(customer.singup_message)
+    end
+
+    # should also have:
+    #
+    # conn = Connection.new("...reg url...", "...api secret...")
+    # service_account = conn.get_service_account(customer.url)
+    # 
+    # service_account.send_message(StatusMessage.new("...."))
+
+    # maybe later do:
+    #
+    # service_account.destroy
+    # 
+    # service_account.update(:vars => {"SOME_VAR" => "something else..."})
+
+
+    # params = JSON.parse(request.body.read)
+    # customer = Customer.create(
+    #               @@customers_hash,
+    #               service_kind,
+    #               params['name'], 
+    #               params['url'], 
+    #               params['messages_url'], 
+    #               params['invoices_url'])
+    # content_type :json
+    # headers 'Location' => customer.url
+    # to_return = {
+    #   :service_account => customer.as_json,
+    #   :message => Message.new('status', customer.singup_message).as_json
+    # }
+    # to_return.to_json
+
+
   end
 
   delete "/api/1/customers/:customer_id" do |customer_id|
@@ -443,8 +503,8 @@ EOT
   end
 
   def self.create_service(service_name, service_kind, service_registration_url, api_secret)
-    engine_yard = EY::ServicesAPI::Connection(service_registration_url, api_secret)
-    
+    engine_yard = EY::ServicesAPI::Connection.new(service_registration_url, api_secret)
+
     service = engine_yard.register_service(
       :name => service_name, 
       :description => "my compliments to the devops", 
@@ -456,93 +516,12 @@ EOT
         "CIA_BACKDOOR_PASSWORD"
       ]
     )
-    
-    service_yaml = service.to_yaml
-    EY::ServicesAPI::Service.load_from_yaml(service_yaml)
-    
 
-    # service = EY::ServicesAPI::Service.new(service_name, "my compliments to the devops")
-    #     service.urls = {
-    #       :service_accounts_url =>     "#{ENV["URL_FOR_LISONJA"]}/api/1/customers/#{service_kind}",
-    #       :home_url =>                 "#{ENV["URL_FOR_LISONJA"]}/",
-    #       :terms_and_conditions_url => "#{ENV["URL_FOR_LISONJA"]}/terms",
-    #     }
-    #     service.vars = [
-    #       "COMPLIMENTS_API_KEY",
-    #       "CIA_BACKDOOR_PASSWORD"
-    #     ]
-    # 
-    #     EY::ServicesAPI.register_service(service_name, 
-    #       service_registration_url, 
-    #       api_secret, 
-    #       "my compliments to the devops", 
-    #         :service_accounts_url =>     "#{ENV["URL_FOR_LISONJA"]}/api/1/customers/#{service_kind}",
-    #         :home_url =>                 "#{ENV["URL_FOR_LISONJA"]}/",
-    #         :terms_and_conditions_url => "#{ENV["URL_FOR_LISONJA"]}/terms",
-    #         :vars => [
-    #           "COMPLIMENTS_API_KEY",
-    #           "CIA_BACKDOOR_PASSWORD"
-    #         ]
-    #     )
-    # 
-    #     EY::ServicesAPI.register_service(
-    #         :name => service_name, 
-    #         :service_registration_url => service_registration_url, 
-    #         :api_secret => api_secret, 
-    #         :description => "my compliments to the devops", 
-    #         :service_accounts_url =>     "#{ENV["URL_FOR_LISONJA"]}/api/1/customers/#{service_kind}",
-    #         :home_url =>                 "#{ENV["URL_FOR_LISONJA"]}/",
-    #         :terms_and_conditions_url => "#{ENV["URL_FOR_LISONJA"]}/terms",
-    #         :vars => [
-    #           "COMPLIMENTS_API_KEY",
-    #           "CIA_BACKDOOR_PASSWORD"
-    #         ]
-    #     )
-    # 
-    # 
-    # 
-    # 
-    #     service = EY::ServicesAPI::Service.create(
-    #         :name => service_name, 
-    #         :service_registration_url => service_registration_url, 
-    #         :api_secret => api_secret, 
-    #         :description => "my compliments to the devops", 
-    #         :service_accounts_url =>     "#{ENV["URL_FOR_LISONJA"]}/api/1/customers/#{service_kind}",
-    #         :home_url =>                 "#{ENV["URL_FOR_LISONJA"]}/",
-    #         :terms_and_conditions_url => "#{ENV["URL_FOR_LISONJA"]}/terms",
-    #         :vars => [
-    #           "COMPLIMENTS_API_KEY",
-    #           "CIA_BACKDOOR_PASSWORD"
-    #         ]
-    #     )
-
-
-
-    service_creation_params = {
-      :service =>
-      {
-        :name =>                     service_name,
-        :description =>              "my compliments to the devops",
-        :service_accounts_url =>     "#{ENV["URL_FOR_LISONJA"]}/api/1/customers/#{service_kind}",
-        :home_url =>                 "#{ENV["URL_FOR_LISONJA"]}/",
-        :terms_and_conditions_url => "#{ENV["URL_FOR_LISONJA"]}/terms",
-        :vars => [
-            "COMPLIMENTS_API_KEY",
-            "CIA_BACKDOOR_PASSWORD"
-        ]
-      }
-    }
-    # RackClient.register_middleware(HMACAutho, api_secret)
-    # RackClient.post
-    response = RestClient.post(
-                        service_registration_url,
-                        service_creation_params.to_json,
-                        :content_type => :json,
-                        :accept => :json, :user_agent => "Lisonja")
-    response_data = JSON.parse(response.body)
     @@services[service_kind] = {}
     @@services[service_kind][:api_secret] = api_secret
-    @@services[service_kind][:service_url] = response.headers[:location]
+    @@services[service_kind][:service_url] = service.url
+
+    #TODO: return a EY::ServicesAPI::Service object instead
     Service.new(service_name, service_kind, @@services[service_kind][:service_url], @@services[service_kind][:api_secret])
   end
 
