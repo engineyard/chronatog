@@ -240,6 +240,12 @@ EOT
     def configuration_url
       "#{ENV["URL_FOR_LISONJA"]}/sso/customers/#{customer_id}/generators/#{id}"
     end
+    # def vars
+    #   {
+    #     "COMPLIMENTS_API_KEY" => api_key,
+    #     "CIA_BACKDOOR_PASSWORD" => "toast"
+    #   }
+    # end
     def as_json
       if service_kind == "fancy"
         {
@@ -302,21 +308,27 @@ EOT
     def url
       "#{ENV["URL_FOR_LISONJA"]}/api/1/customers/#{id}"
     end
-    def as_json
-      to_return = {
-        :url => url,
-        :configuration_required => false,
-        :configuration_url  => nil, #meaning, no configuration possible
-        :provisioned_services_url  => "#{url}/compliment_generators"
-      }
-      if service_kind == "fancy"
-        to_return.merge!(
-          :configuration_required => true,
-          :configuration_url => "#{ENV["URL_FOR_LISONJA"]}/sso/customers/#{id}"
-        )
-      end
-      to_return
+    def provisioned_services_url
+      "#{url}/compliment_generators"
     end
+    def configuration_url
+      "#{ENV["URL_FOR_LISONJA"]}/sso/customers/#{id}"
+    end
+    # def as_json
+    #   to_return = {
+    #     :url => url,
+    #     :configuration_required => false,
+    #     :configuration_url  => nil, #meaning, no configuration possible
+    #     :provisioned_services_url  => "#{url}/compliment_generators"
+    #   }
+    #   if service_kind == "fancy"
+    #     to_return.merge!(
+    #       :configuration_required => true,
+    #       :configuration_url => "#{ENV["URL_FOR_LISONJA"]}/sso/customers/#{id}"
+    #     )
+    #   end
+    #   to_return
+    # end
     def singup_message
       "You enabled Lisonja. Well done #{name}!"
     end
@@ -400,30 +412,27 @@ EOT
   end
 
 
-  # if service_kind == "fancy"
-  #   {
+
+  # 
+  # def as_json
+  #   to_return = {
   #     :url => url,
-  #     :configuration_url => configuration_url,
-  #     :configuration_required => true,
-  #     :vars => {
-  #       "COMPLIMENTS_API_KEY" => api_key,
-  #       "CIA_BACKDOOR_PASSWORD" => "toast"
-  #     }
+  #     :configuration_required => false,
+  #     :configuration_url  => nil, #meaning, no configuration possible
+  #     :provisioned_services_url  => "#{url}/compliment_generators"
   #   }
-  # else
-  #   {
-  #     :url => url,
-  #     :configuration_url => nil, #meaning, no configuration possible
-  #     :vars => {
-  #       "COMPLIMENTS_API_KEY" => api_key,
-  #       "CIA_BACKDOOR_PASSWORD" => "toast"
-  #     }
-  #   }
+  #   if service_kind == "fancy"
+  #     to_return.merge!(
+  #       :configuration_required => true,
+  #       :configuration_url => "#{ENV["URL_FOR_LISONJA"]}/sso/customers/#{id}"
+  #     )
+  #   end
+  #   to_return
   # end
 
   post '/api/1/customers/:service_kind' do |service_kind|
     #parse the request
-    service_account = ServiceAccount.create_from_request(request.body.read)
+    service_account = EY::ServicesAPI::ServiceAccount.create_from_request(request.body.read)
 
     #do local persistence
     customer = Customer.create(@@customers_hash, service_kind, service_account.name, service_account.url, service_account.messages_url, service_account.invoices_url)
@@ -432,16 +441,20 @@ EOT
     content_type :json
     headers 'Location' => customer.url
 
-    service_account.vars = customer.vars
-
     #response with json about self
-    service_account.creation_response_json do |presenter|
+    response_hash = service_account.creation_response_hash do |presenter|
       if service_kind == "fancy"
         presenter.configuration_required = true
         presenter.configuration_url = customer.configuration_url
       end
-      presenter.status_message = StatusMessage.new(customer.singup_message)
+      presenter.provisioned_services_url = customer.provisioned_services_url
+      presenter.url = customer.url
+      presenter.message = EY::ServicesAPI::StatusMessage.new(:subject => customer.singup_message)
     end
+
+    puts "response_hash #{response_hash.inspect}"
+
+    response_hash.to_json
 
     # should also have:
     #
