@@ -260,6 +260,7 @@ EOT
       else
         {
           :url => url,
+          :configuration_required => false,
           :configuration_url => nil, #meaning, no configuration possible
           :vars => {
             "COMPLIMENTS_API_KEY" => api_key,
@@ -446,13 +447,15 @@ EOT
       if service_kind == "fancy"
         presenter.configuration_required = true
         presenter.configuration_url = customer.configuration_url
+      else
+        presenter.configuration_required = false
       end
       presenter.provisioned_services_url = customer.provisioned_services_url
       presenter.url = customer.url
       presenter.message = EY::ServicesAPI::StatusMessage.new(:subject => customer.singup_message)
     end
 
-    puts "response_hash #{response_hash.inspect}"
+    # puts "response_hash #{response_hash.inspect}"
 
     response_hash.to_json
 
