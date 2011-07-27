@@ -511,27 +511,45 @@ EOT
   end
 
   def self.register_regular_service(service_registration_url, api_secret)
-    create_service("Lisonja", "regular", service_registration_url, api_secret)
+    create_service("Lisonja", "regular", regular_service_registration_params, service_registration_url, api_secret)
   end
 
   def self.register_fancy_service(service_registration_url, api_secret)
-    create_service("Lisonja-Configured", "fancy", service_registration_url, api_secret)
+    create_service("Lisonja-Configured", "fancy", fancy_service_registration_params, service_registration_url, api_secret)
   end
 
-  def self.create_service(service_name, service_kind, service_registration_url, api_secret)
-    engine_yard = EY::ServicesAPI::Connection.new(service_registration_url, api_secret)
-
-    service = engine_yard.register_service(
-      :name => service_name, 
+  def self.regular_service_registration_params
+    {
+      :name => "Lisonja", 
       :description => "my compliments to the devops", 
-      :service_accounts_url =>     "#{ENV["URL_FOR_LISONJA"]}/api/1/customers/#{service_kind}",
+      :service_accounts_url =>     "#{ENV["URL_FOR_LISONJA"]}/api/1/customers/regular",
       :home_url =>                 "#{ENV["URL_FOR_LISONJA"]}/",
       :terms_and_conditions_url => "#{ENV["URL_FOR_LISONJA"]}/terms",
       :vars => [
         "COMPLIMENTS_API_KEY",
         "CIA_BACKDOOR_PASSWORD"
       ]
-    )
+    }
+  end
+
+  def self.fancy_service_registration_params
+    {
+      :name => "Lisonja-Configured", 
+      :description => "my compliments to the devops", 
+      :service_accounts_url =>     "#{ENV["URL_FOR_LISONJA"]}/api/1/customers/fancy",
+      :home_url =>                 "#{ENV["URL_FOR_LISONJA"]}/",
+      :terms_and_conditions_url => "#{ENV["URL_FOR_LISONJA"]}/terms",
+      :vars => [
+        "COMPLIMENTS_API_KEY",
+        "CIA_BACKDOOR_PASSWORD"
+      ]
+    }
+  end
+
+  def self.create_service(service_name, service_kind, registration_params, service_registration_url, api_secret)
+    engine_yard = EY::ServicesAPI::Connection.new(api_secret)
+
+    service = engine_yard.register_service(service_registration_url, registration_params)
 
     @@services[service_kind] = {}
     @@services[service_kind][:api_secret] = api_secret
