@@ -161,16 +161,46 @@ EOT
   # end
 
   post "/api/1/customers/:customer_id/compliment_generators" do |customer_id|
-    params = JSON.parse(request.body.read)
+    #parse the request
+    provisioned_service = EY::ServicesAPI::ProvisionedServiceCreation.from_request(request.body.read)
+
+    #do local persistence
     customer = @@customers_hash[customer_id.to_s]
-    #TODO: find a way to make the generator different depending on app or env (for benefit of example)
-    generator = customer.generate_generator(params["environment"]["name"], params['messages_url'])
+    generator = customer.generate_generator(provisioned_service.environment.name, provisioned_service.messages_url)
+
+    #sinatra stuff
     content_type :json
     headers 'Location' => generator.url
-    {
-      :provisioned_service => generator.as_json,
-      :message => Message.new('status', generator.created_message).as_json
-    }.to_json
+
+    #response with json about self
+    response_hash = service_account.creation_response_hash do |presenter|
+      if generator.service_kind == "fancy"
+        presenter.configuration_url = configuration_url
+        presenter.configuration_required = true
+      else
+        presenter.configuration_required = false
+      end
+      presenter.vars = {
+        "COMPLIMENTS_API_KEY" => generator.api_key,
+        "CIA_BACKDOOR_PASSWORD" => "toast"
+      }
+      presenter.url = generator.url
+      presenter.message = EY::ServicesAPI::StatusMessage.new(:subject => generator.created_message)
+    end
+
+    response_hash.to_json
+    # 
+    # 
+    # params = JSON.parse(request.body.read)
+    # customer = @@customers_hash[customer_id.to_s]
+    # #TODO: find a way to make the generator different depending on app or env (for benefit of example)
+    # generator = customer.generate_generator(params["environment"]["name"], params['messages_url'])
+    # content_type :json
+    # headers 'Location' => generator.url
+    # {
+    #   :provisioned_service => generator.as_json,
+    #   :message => Message.new('status', generator.created_message).as_json
+    # }.to_json
   end
 
   get "/sso/customers/:customer_id" do |customer_id|
@@ -246,29 +276,29 @@ EOT
     #     "CIA_BACKDOOR_PASSWORD" => "toast"
     #   }
     # end
-    def as_json
-      if service_kind == "fancy"
-        {
-          :url => url,
-          :configuration_url => configuration_url,
-          :configuration_required => true,
-          :vars => {
-            "COMPLIMENTS_API_KEY" => api_key,
-            "CIA_BACKDOOR_PASSWORD" => "toast"
-          }
-        }
-      else
-        {
-          :url => url,
-          :configuration_required => false,
-          :configuration_url => nil, #meaning, no configuration possible
-          :vars => {
-            "COMPLIMENTS_API_KEY" => api_key,
-            "CIA_BACKDOOR_PASSWORD" => "toast"
-          }
-        }
-      end
-    end
+    # def as_json
+    #   if service_kind == "fancy"
+    #     {
+    #       :url => url,
+    #       :configuration_url => configuration_url,
+    #       :configuration_required => true,
+    #       :vars => {
+    #         "COMPLIMENTS_API_KEY" => api_key,
+    #         "CIA_BACKDOOR_PASSWORD" => "toast"
+    #       }
+    #     }
+    #   else
+    #     {
+    #       :url => url,
+    #       :configuration_required => false,
+    #       :configuration_url => nil, #meaning, no configuration possible
+    #       :vars => {
+    #         "COMPLIMENTS_API_KEY" => api_key,
+    #         "CIA_BACKDOOR_PASSWORD" => "toast"
+    #       }
+    #     }
+    #   end
+    # end
     def created_message
       "Compliment Generator Generated!"
     end
@@ -412,28 +442,9 @@ EOT
     end
   end
 
-
-
-  # 
-  # def as_json
-  #   to_return = {
-  #     :url => url,
-  #     :configuration_required => false,
-  #     :configuration_url  => nil, #meaning, no configuration possible
-  #     :provisioned_services_url  => "#{url}/compliment_generators"
-  #   }
-  #   if service_kind == "fancy"
-  #     to_return.merge!(
-  #       :configuration_required => true,
-  #       :configuration_url => "#{ENV["URL_FOR_LISONJA"]}/sso/customers/#{id}"
-  #     )
-  #   end
-  #   to_return
-  # end
-
   post '/api/1/customers/:service_kind' do |service_kind|
     #parse the request
-    service_account = EY::ServicesAPI::ServiceAccount.create_from_request(request.body.read)
+    service_account = EY::ServicesAPI::ServiceAccountCreation.from_request(request.body.read)
 
     #do local persistence
     customer = Customer.create(@@customers_hash, service_kind, service_account.name, service_account.url, service_account.messages_url, service_account.invoices_url)
@@ -455,41 +466,7 @@ EOT
       presenter.message = EY::ServicesAPI::StatusMessage.new(:subject => customer.singup_message)
     end
 
-    # puts "response_hash #{response_hash.inspect}"
-
     response_hash.to_json
-
-    # should also have:
-    #
-    # conn = Connection.new("...reg url...", "...api secret...")
-    # service_account = conn.get_service_account(customer.url)
-    # 
-    # service_account.send_message(StatusMessage.new("...."))
-
-    # maybe later do:
-    #
-    # service_account.destroy
-    # 
-    # service_account.update(:vars => {"SOME_VAR" => "something else..."})
-
-
-    # params = JSON.parse(request.body.read)
-    # customer = Customer.create(
-    #               @@customers_hash,
-    #               service_kind,
-    #               params['name'], 
-    #               params['url'], 
-    #               params['messages_url'], 
-    #               params['invoices_url'])
-    # content_type :json
-    # headers 'Location' => customer.url
-    # to_return = {
-    #   :service_account => customer.as_json,
-    #   :message => Message.new('status', customer.singup_message).as_json
-    # }
-    # to_return.to_json
-
-
   end
 
   delete "/api/1/customers/:customer_id" do |customer_id|
