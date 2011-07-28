@@ -173,9 +173,9 @@ EOT
     headers 'Location' => generator.url
 
     #response with json about self
-    response_hash = service_account.creation_response_hash do |presenter|
+    provisioned_service.creation_response_hash do |presenter|
       if generator.service_kind == "fancy"
-        presenter.configuration_url = configuration_url
+        presenter.configuration_url = generator.configuration_url
         presenter.configuration_required = true
       else
         presenter.configuration_required = false
@@ -186,21 +186,7 @@ EOT
       }
       presenter.url = generator.url
       presenter.message = EY::ServicesAPI::StatusMessage.new(:subject => generator.created_message)
-    end
-
-    response_hash.to_json
-    # 
-    # 
-    # params = JSON.parse(request.body.read)
-    # customer = @@customers_hash[customer_id.to_s]
-    # #TODO: find a way to make the generator different depending on app or env (for benefit of example)
-    # generator = customer.generate_generator(params["environment"]["name"], params['messages_url'])
-    # content_type :json
-    # headers 'Location' => generator.url
-    # {
-    #   :provisioned_service => generator.as_json,
-    #   :message => Message.new('status', generator.created_message).as_json
-    # }.to_json
+    end.to_json
   end
 
   get "/sso/customers/:customer_id" do |customer_id|
