@@ -302,6 +302,9 @@ EOT
       super(*args)
       @created_at = Time.now
     end
+    def connection
+      EY::ServicesAPI::Connection.new(Lisonja.services[self.service_kind][:api_secret])
+    end
     def url
       "#{ENV["URL_FOR_LISONJA"]}/api/1/customers/#{id}"
     end
@@ -323,7 +326,6 @@ EOT
       generator
     end
     def send_compliment(message_type, compliment)
-      connection = EY::ServicesAPI::Connection.new(Lisonja.services[self.service_kind][:api_secret])
       message = EY::ServicesAPI::Message.new(:message_type => message_type, :subject => compliment)
       connection.send_message(self.messages_url, message)
     end
@@ -347,24 +349,36 @@ EOT
         total_price += usage_price
       end
       if total_price > 0
-        #TODO: charge per compliment generator?
-        invoice_params = {
-          :invoice => {
-            :total_amount_cents => total_price,
-            :line_item_description => "For service from #{last_billed_at} to #{billing_at}, "+
-                                      "includes #{compliment_generators.size} compliment generators."
-          }
-        }
-        response = RestClient.post(
-                            invoices_url,
-                            invoice_params.to_json,
-                            :content_type => :json,
-                            :accept => :json, :user_agent => "Lisonja")
-        response_data = JSON.parse(response.body)
-        #TODO: do something with the response?
+        line_item_description = "For service from #{last_billed_at} to #{billing_at}, "+
+                                  "includes #{compliment_generators.size} compliment generators."
+
+        invoice = EY::ServicesAPI::Invoice.new(
+          :total_amount_cents => total_price,
+          :line_item_description => line_item_description)
+        connection.send_invoice(invoices_url, invoice)
+
+        # #TODO: charge per compliment generator?
+        # invoice_params = {
+        #   :invoice => {
+        #     :total_amount_cents => total_price,
+        #     :line_item_description => "For service from #{last_billed_at} to #{billing_at}, "+
+        #                               "includes #{compliment_generators.size} compliment generators."
+        #   }
+        # }
+        # response = RestClient.post(
+        #                     invoices_url,
+        #                     invoice_params.to_json,
+        #                     :content_type => :json,
+        #                     :accept => :json, :user_agent => "Lisonja")
+        # response_data = JSON.parse(response.body)
+        # #TODO: do something with the response?
+        # #TODO: test that you can't bill a different customer
+        # #WHEN testing: handling what happens when you attempt to bill $0 or a negative amount?
+
         @last_billed_at = billing_at
         #return info about charges made
-        invoice_params
+        # invoice_params
+        [total_price, line_item_description]
       else
         #return no charge made
         nil
