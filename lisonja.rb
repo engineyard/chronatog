@@ -185,7 +185,7 @@ EOT
         "CIA_BACKDOOR_PASSWORD" => "toast"
       }
       presenter.url = generator.url
-      presenter.message = EY::ServicesAPI::StatusMessage.new(:subject => generator.created_message)
+      presenter.message = EY::ServicesAPI::Message.new(:message_type => "status", :subject => generator.created_message)
     end.to_json
   end
 
@@ -211,7 +211,11 @@ EOT
   post "/sso/customers/:customer_id/choose_plan" do |customer_id|
     @customer = @@customers_hash[customer_id.to_s]
     @customer.plan_type = params[:plan_type]
-    Message.send_message(@customer.messages_url, :status, "#{params[:plan_type]} Activated!")
+
+    connection = EY::ServicesAPI::Connection.new(Lisonja.services[@customer.service_kind][:api_secret])
+    message = EY::ServicesAPI::Message.new(:message_type => 'status', :subject => "#{params[:plan_type]} Activated!")
+    connection.send_message(@customer.messages_url, message)
+
     redirect params[:ey_return_to_url]
   end
   
@@ -240,7 +244,11 @@ EOT
     @customer = @@customers_hash[customer_id.to_s]
     @generator = @customer.compliment_generators.detect{ |g| g.id.to_s == generator_id.to_s }
     @generator.generator_type = params[:generator_type]
-    Message.send_message(@generator.messages_url, :status, "#{params[:generator_type]} now available for #{@generator.name}")
+
+    connection = EY::ServicesAPI::Connection.new(Lisonja.services[@customer.service_kind][:api_secret])
+    message = EY::ServicesAPI::Message.new(:message_type => 'status', :subject => "#{params[:generator_type]} now available for #{@generator.name}")
+    connection.send_message(@generator.messages_url, message)
+
     redirect params[:ey_return_to_url]
   end
 
@@ -256,35 +264,6 @@ EOT
     def configuration_url
       "#{ENV["URL_FOR_LISONJA"]}/sso/customers/#{customer_id}/generators/#{id}"
     end
-    # def vars
-    #   {
-    #     "COMPLIMENTS_API_KEY" => api_key,
-    #     "CIA_BACKDOOR_PASSWORD" => "toast"
-    #   }
-    # end
-    # def as_json
-    #   if service_kind == "fancy"
-    #     {
-    #       :url => url,
-    #       :configuration_url => configuration_url,
-    #       :configuration_required => true,
-    #       :vars => {
-    #         "COMPLIMENTS_API_KEY" => api_key,
-    #         "CIA_BACKDOOR_PASSWORD" => "toast"
-    #       }
-    #     }
-    #   else
-    #     {
-    #       :url => url,
-    #       :configuration_required => false,
-    #       :configuration_url => nil, #meaning, no configuration possible
-    #       :vars => {
-    #         "COMPLIMENTS_API_KEY" => api_key,
-    #         "CIA_BACKDOOR_PASSWORD" => "toast"
-    #       }
-    #     }
-    #   end
-    # end
     def created_message
       "Compliment Generator Generated!"
     end
@@ -305,8 +284,9 @@ EOT
     end
     def generate_and_send_compliment(message_type)
       compliment = generate_compliment!
-      message = Message.new(message_type, compliment, nil)
-      message.send_message(self.messages_url)
+      connection = EY::ServicesAPI::Connection.new(Lisonja.services[self.service_kind][:api_secret])
+      message = EY::ServicesAPI::Message.new(:message_type => message_type, :subject => compliment)
+      connection.send_message(self.messages_url, message)
       compliment
     end
     def get_billable_usage!(at_time)
@@ -331,21 +311,6 @@ EOT
     def configuration_url
       "#{ENV["URL_FOR_LISONJA"]}/sso/customers/#{id}"
     end
-    # def as_json
-    #   to_return = {
-    #     :url => url,
-    #     :configuration_required => false,
-    #     :configuration_url  => nil, #meaning, no configuration possible
-    #     :provisioned_services_url  => "#{url}/compliment_generators"
-    #   }
-    #   if service_kind == "fancy"
-    #     to_return.merge!(
-    #       :configuration_required => true,
-    #       :configuration_url => "#{ENV["URL_FOR_LISONJA"]}/sso/customers/#{id}"
-    #     )
-    #   end
-    #   to_return
-    # end
     def singup_message
       "You enabled Lisonja. Well done #{name}!"
     end
@@ -358,8 +323,9 @@ EOT
       generator
     end
     def send_compliment(message_type, compliment)
-      message = Message.new(message_type, compliment, nil)
-      message.send_message(self.messages_url)
+      connection = EY::ServicesAPI::Connection.new(Lisonja.services[self.service_kind][:api_secret])
+      message = EY::ServicesAPI::Message.new(:message_type => message_type, :subject => compliment)
+      connection.send_message(self.messages_url, message)
     end
     def self.create(customers_hash, service_kind, name, api_url = nil, messages_url = nil, invoices_url = nil)
       @@customer_count ||= 0
@@ -410,24 +376,6 @@ EOT
     end
   end
 
-  class Message < Struct.new(:message_type, :subject, :body)
-    def as_json
-      {
-        :message_type => message_type,
-        :subject => subject,
-        :body => body
-      }
-    end
-    def send_message(messages_url)
-      RestClient.post(messages_url, {:message => as_json}.to_json, :content_type => :json,
-        :accept => :json, :user_agent => "Lisonja")
-    end
-
-    def self.send_message(to, message_type, subject, body=nil)
-      Message.new(message_type, subject, body).send_message(to)
-    end
-  end
-
   post '/api/1/customers/:service_kind' do |service_kind|
     #parse the request
     service_account = EY::ServicesAPI::ServiceAccountCreation.from_request(request.body.read)
@@ -449,7 +397,7 @@ EOT
       end
       presenter.provisioned_services_url = customer.provisioned_services_url
       presenter.url = customer.url
-      presenter.message = EY::ServicesAPI::StatusMessage.new(:subject => customer.singup_message)
+      presenter.message = EY::ServicesAPI::Message.new(:message_type => "status", :subject => customer.singup_message)
     end
 
     response_hash.to_json
@@ -466,6 +414,9 @@ EOT
   def self.reset!
     @@services = {}
     @@customers_hash = {}
+  end
+  def self.services
+    @@services
   end
   def self.seed_data
     Customer.create(@@customers_hash, "barbara").generate_generator
