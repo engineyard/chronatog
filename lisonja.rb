@@ -1,5 +1,4 @@
 require 'sinatra'
-require 'rest-client'
 require 'json'
 require 'yaml'
 require 'haml'
@@ -151,14 +150,6 @@ EOT
     customer.send_compliment(params[:message_type], generated)
     redirect "/customers/#{customer.id}?message=#{URI.escape(generated)}"
   end
-
-  # post "/customers/:customer_id/compliment_generators/:generator_id/generate" do |customer_id, generator_id|
-  #   customer = @@customers_hash[customer_id.to_s]
-  #   generator = customer.compliment_generators.detect{|g| g.id.to_s == generator_id.to_s}
-  #   generated = generator.generate_compliment!
-  #   customer.send_compliment(params[:message_type], generated)
-  #   redirect "/customers/#{customer.id}?message=#{URI.escape(generated)}"
-  # end
 
   post "/api/1/customers/:customer_id/compliment_generators" do |customer_id|
     #parse the request
@@ -357,27 +348,9 @@ EOT
           :line_item_description => line_item_description)
         connection.send_invoice(invoices_url, invoice)
 
-        # #TODO: charge per compliment generator?
-        # invoice_params = {
-        #   :invoice => {
-        #     :total_amount_cents => total_price,
-        #     :line_item_description => "For service from #{last_billed_at} to #{billing_at}, "+
-        #                               "includes #{compliment_generators.size} compliment generators."
-        #   }
-        # }
-        # response = RestClient.post(
-        #                     invoices_url,
-        #                     invoice_params.to_json,
-        #                     :content_type => :json,
-        #                     :accept => :json, :user_agent => "Lisonja")
-        # response_data = JSON.parse(response.body)
-        # #TODO: do something with the response?
-        # #TODO: test that you can't bill a different customer
-        # #WHEN testing: handling what happens when you attempt to bill $0 or a negative amount?
-
         @last_billed_at = billing_at
+
         #return info about charges made
-        # invoice_params
         [total_price, line_item_description]
       else
         #return no charge made
