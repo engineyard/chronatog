@@ -13,9 +13,27 @@ class Lisonja < Sinatra::Base
   class << self
     attr_accessor :compliment_source
   end
+  
+  def self.connection
+    EY::ServicesAPI::Connection.new(@@api_creds[:auth_id], @@api_creds[:auth_key])
+  end
 
   get "/" do
     to_output = ""
+    if !@@api_creds[:auth_key]
+      to_output += <<-EOT
+        <div id="creds">
+        Save API Creds:<br/>
+          <form action="/savecreds" method="POST">
+            <label for="auth_id">Auth ID</label>
+            <input id="auth_id" name="auth_id" type="text" />
+            <label for="auth_key">Auth Key</label>
+            <input id="auth_key" name="auth_key" type="text" />
+            <input value="Save Creds" type="submit" />
+          </form>
+        </div>
+      EOT
+    end
     if !@@services["regular"]
       to_output += <<-EOT
         <div id="basic">
@@ -23,10 +41,6 @@ class Lisonja < Sinatra::Base
           <form action="/register" method="POST">
             <label for="service_registration_url">Service Registration API URL</label>
             <input id="service_registration_url" name="service_registration_url" type="text" />
-            
-            <label for="api_secret">API Secret</label>
-            <input id="api_secret" name="api_secret" type="text" />
-            
             <input value="Register" type="submit" />
           </form>
         </div>
@@ -41,10 +55,6 @@ class Lisonja < Sinatra::Base
           <form action="/registerfancy" method="POST">
             <label for="service_registration_url">Service Registration API URL</label>
             <input id="service_registration_url" name="service_registration_url" type="text" />
-            
-            <label for="api_secret">API Secret</label>
-            <input id="api_secret" name="api_secret" type="text" />
-            
             <input value="Register" type="submit" />
           </form>
         </div>
@@ -71,12 +81,12 @@ class Lisonja < Sinatra::Base
   end
 
   post "/register" do
-    Lisonja.register_regular_service(params[:service_registration_url], params[:api_secret])
+    Lisonja.register_regular_service(params[:service_registration_url])
     redirect "/"
   end
 
   post "/registerfancy" do
-    Lisonja.register_fancy_service(params[:service_registration_url], params[:api_secret])
+    Lisonja.register_fancy_service(params[:service_registration_url])
     redirect "/"
   end
 
@@ -189,7 +199,7 @@ EOT
 
   get "/sso/customers/:customer_id" do |customer_id|
     #TODO: a better way to know we are using the 'fancy' service
-    raise "Signature invalid" unless EY::ApiHMAC.verify_for_sso(request.url, Lisonja.services["fancy"][:api_secret])
+    raise "Signature invalid" unless EY::ApiHMAC.verify_for_sso(request.url, @@api_creds[:auth_id], @@api_creds[:auth_key])
     @customer = @@customers_hash[customer_id.to_s]
     @redirect_to = params[:ey_return_to_url]
     haml :plans
@@ -210,9 +220,8 @@ EOT
     @customer = @@customers_hash[customer_id.to_s]
     @customer.plan_type = params[:plan_type]
 
-    connection = EY::ServicesAPI::Connection.new(Lisonja.services[@customer.service_kind][:api_secret])
     message = EY::ServicesAPI::Message.new(:message_type => 'status', :subject => "#{params[:plan_type]} Activated!")
-    connection.send_message(@customer.messages_url, message)
+    Lisonja.connection.send_message(@customer.messages_url, message)
 
     redirect params[:ey_return_to_url]
   end
@@ -220,7 +229,7 @@ EOT
   get "/sso/customers/:customer_id/generators/:generator_id" do |customer_id, generator_id|
     #TODO: a better way to know we are using the 'fancy' service
     #TODO: turn on verifying again when signature is using correct secret..
-    # raise "Signature invalid" unless EY::ApiHMAC.verify_for_sso(request.url, Lisonja.services["fancy"][:api_secret])
+    # raise "Signature invalid" unless EY::ApiHMAC.verify_for_sso ...
     @customer = @@customers_hash[customer_id.to_s]
     @generator = @customer.compliment_generators.detect{ |g| g.id.to_s == generator_id.to_s }
     @redirect_to = params[:ey_return_to_url]
@@ -243,9 +252,8 @@ EOT
     @generator = @customer.compliment_generators.detect{ |g| g.id.to_s == generator_id.to_s }
     @generator.generator_type = params[:generator_type]
 
-    connection = EY::ServicesAPI::Connection.new(Lisonja.services[@customer.service_kind][:api_secret])
     message = EY::ServicesAPI::Message.new(:message_type => 'status', :subject => "#{params[:generator_type]} now available for #{@generator.name}")
-    connection.send_message(@generator.messages_url, message)
+    Lisonja.connection.send_message(@generator.messages_url, message)
 
     redirect params[:ey_return_to_url]
   end
@@ -282,9 +290,8 @@ EOT
     end
     def generate_and_send_compliment(message_type)
       compliment = generate_compliment!
-      connection = EY::ServicesAPI::Connection.new(Lisonja.services[self.service_kind][:api_secret])
       message = EY::ServicesAPI::Message.new(:message_type => message_type, :subject => compliment)
-      connection.send_message(self.messages_url, message)
+      Lisonja.connection.send_message(self.messages_url, message)
       compliment
     end
     def get_billable_usage!(at_time)
@@ -299,9 +306,6 @@ EOT
     def initialize(*args)
       super(*args)
       @created_at = Time.now
-    end
-    def connection
-      EY::ServicesAPI::Connection.new(Lisonja.services[self.service_kind][:api_secret])
     end
     def url
       "#{ENV["URL_FOR_LISONJA"]}/api/1/customers/#{id}"
@@ -325,7 +329,7 @@ EOT
     end
     def send_compliment(message_type, compliment)
       message = EY::ServicesAPI::Message.new(:message_type => message_type, :subject => compliment)
-      connection.send_message(self.messages_url, message)
+      Lisonja.connection.send_message(self.messages_url, message)
     end
     def self.create(customers_hash, service_kind, name, api_url = nil, messages_url = nil, invoices_url = nil)
       @@customer_count ||= 0
@@ -353,7 +357,7 @@ EOT
         invoice = EY::ServicesAPI::Invoice.new(
           :total_amount_cents => total_price,
           :line_item_description => line_item_description)
-        connection.send_invoice(invoices_url, invoice)
+        Lisonja.connection.send_invoice(invoices_url, invoice)
 
         @last_billed_at = billing_at
 
@@ -408,17 +412,21 @@ EOT
   def self.reset!
     @@services = {}
     @@customers_hash = {}
+    @@api_creds = {}
   end
   def self.services
     @@services
   end
-
-  def self.register_regular_service(service_registration_url, api_secret)
-    create_service("Lisonja", "regular", regular_service_registration_params, service_registration_url, api_secret)
+  def self.api_creds
+    @@api_creds
   end
 
-  def self.register_fancy_service(service_registration_url, api_secret)
-    create_service("Lisonja-Configured", "fancy", fancy_service_registration_params, service_registration_url, api_secret)
+  def self.register_regular_service(service_registration_url)
+    create_service("Lisonja", "regular", regular_service_registration_params, service_registration_url)
+  end
+
+  def self.register_fancy_service(service_registration_url)
+    create_service("Lisonja-Configured", "fancy", fancy_service_registration_params, service_registration_url)
   end
 
   def self.regular_service_registration_params
@@ -449,20 +457,17 @@ EOT
     }
   end
 
-  def self.create_service(service_name, service_kind, registration_params, service_registration_url, api_secret)
-    engine_yard = EY::ServicesAPI::Connection.new(api_secret)
-
-    service = engine_yard.register_service(service_registration_url, registration_params)
+  def self.create_service(service_name, service_kind, registration_params, service_registration_url)
+    service = Lisonja.connection.register_service(service_registration_url, registration_params)
 
     @@services[service_kind] = {}
-    @@services[service_kind][:api_secret] = api_secret
     @@services[service_kind][:service_url] = service.url
 
     #TODO: return a EY::ServicesAPI::Service object instead
-    Service.new(service_name, service_kind, @@services[service_kind][:service_url], @@services[service_kind][:api_secret])
+    Service.new(service_name, service_kind, @@services[service_kind][:service_url])
   end
 
-  class Service < Struct.new(:name, :service_kind, :service_url, :api_secret)
+  class Service < Struct.new(:name, :service_kind, :service_url)
   end
 
   def self.customers
