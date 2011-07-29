@@ -180,6 +180,13 @@ EOT
     end.to_json
   end
 
+  delete "/api/1/customers/:customer_id/compliment_generators/:generator_id" do |customer_id, generator_id|
+    customer = @@customers_hash[customer_id.to_s]
+    customer.compliment_generators.reject! {|g| g.id.to_s == generator_id.to_s}
+    content_type :json
+    {}.to_json
+  end
+
   get "/sso/customers/:customer_id" do |customer_id|
     #TODO: a better way to know we are using the 'fancy' service
     raise "Signature invalid" unless EY::ApiHMAC.verify_for_sso(request.url, Lisonja.services["fancy"][:api_secret])
@@ -404,11 +411,6 @@ EOT
   end
   def self.services
     @@services
-  end
-  def self.seed_data
-    Customer.create(@@customers_hash, "barbara").generate_generator
-    Customer.create(@@customers_hash, "josephine").generate_generator
-    Customer.create(@@customers_hash, "Pedro").generate_generator
   end
 
   def self.register_regular_service(service_registration_url, api_secret)
