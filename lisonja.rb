@@ -15,7 +15,7 @@ class Lisonja < Sinatra::Base
   end
   
   def self.connection
-    EY::ServicesAPI::Connection.new(@@api_creds[:auth_id], @@api_creds[:auth_key])
+    EY::ServicesAPI::Connection.new(@@api_creds[:auth_id], @@api_creds[:auth_key], "Lisonja")
   end
 
   get "/" do
