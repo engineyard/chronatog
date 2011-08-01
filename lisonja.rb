@@ -80,6 +80,11 @@ class Lisonja < Sinatra::Base
     "Just billed: #{invoices_billed.to_yaml}"
   end
 
+  post "/savecreds" do
+    Lisonja.save_creds(params[:auth_id], params[:auth_key])
+    "ok"
+  end
+
   post "/register" do
     Lisonja.register_regular_service(params[:service_registration_url])
     redirect "/"
@@ -465,6 +470,11 @@ EOT
 
     #TODO: return a EY::ServicesAPI::Service object instead
     Service.new(service_name, service_kind, @@services[service_kind][:service_url])
+  end
+
+  def self.save_creds(auth_id, auth_key)
+    @@api_creds[:auth_id] = auth_id
+    @@api_creds[:auth_key] = auth_key
   end
 
   class Service < Struct.new(:name, :service_kind, :service_url)
