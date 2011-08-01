@@ -203,7 +203,6 @@ EOT
   end
 
   get "/sso/customers/:customer_id" do |customer_id|
-    #TODO: a better way to know we are using the 'fancy' service
     raise "Signature invalid" unless EY::ApiHMAC.verify_for_sso(request.url, @@api_creds[:auth_id], @@api_creds[:auth_key])
     @customer = @@customers_hash[customer_id.to_s]
     @redirect_to = params[:ey_return_to_url]
@@ -232,9 +231,8 @@ EOT
   end
   
   get "/sso/customers/:customer_id/generators/:generator_id" do |customer_id, generator_id|
-    #TODO: a better way to know we are using the 'fancy' service
-    #TODO: turn on verifying again when signature is using correct secret..
-    # raise "Signature invalid" unless EY::ApiHMAC.verify_for_sso ...
+    #TODO: use a signature verification middleware instead?
+    raise "Signature invalid" unless EY::ApiHMAC.verify_for_sso(request.url, @@api_creds[:auth_id], @@api_creds[:auth_key])
     @customer = @@customers_hash[customer_id.to_s]
     @generator = @customer.compliment_generators.detect{ |g| g.id.to_s == generator_id.to_s }
     @redirect_to = params[:ey_return_to_url]
