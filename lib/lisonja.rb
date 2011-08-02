@@ -4,6 +4,10 @@ require 'yaml'
 require 'haml'
 require 'ey_api_hmac'
 require 'ey_services_api'
+require 'lisonja/models/model'
+%w( creds ).each do |model_name|
+  require "lisonja/models/#{model_name}"
+end
 
 module Lisonja
   class << self
@@ -17,7 +21,7 @@ module Lisonja
 
     get "/" do
       to_output = ""
-      if !Lisonja.api_creds[:auth_key]
+      if !Lisonja.api_creds
         to_output += <<-EOT
           <div id="creds">
           Save API Creds:<br/>
@@ -43,7 +47,7 @@ module Lisonja
           </div>
         EOT
       else
-        to_output += "Regular lisona registered as #{Lisonja.services["regular"][:service_url]} <br/>"
+        to_output += "Regular lisonja registered as #{Lisonja.services["regular"][:service_url]} <br/>"
       end
       if !Lisonja.services["fancy"]
         to_output += <<-EOT
@@ -57,7 +61,7 @@ module Lisonja
           </div>
         EOT
       else
-        to_output += "Fancy lisona registered as #{Lisonja.services["fancy"][:service_url]} <br/>"
+        to_output += "Fancy lisonja registered as #{Lisonja.services["fancy"][:service_url]} <br/>"
       end
       to_output += "<a href='/cron'>run billing cron</a> <br/>"
       to_output += "current customer info: <pre>#{Lisonja.customers_hash.to_yaml}</pre>"
@@ -200,7 +204,7 @@ EOT
     end
 
     get "/sso/customers/:customer_id" do |customer_id|
-      raise "Signature invalid" unless EY::ApiHMAC.verify_for_sso(request.url, Lisonja.api_creds[:auth_id], Lisonja.api_creds[:auth_key])
+      raise "Signature invalid" unless EY::ApiHMAC.verify_for_sso(request.url, Lisonja.api_creds.auth_id, Lisonja.api_creds.auth_key)
       @customer = Lisonja.customers_hash[customer_id.to_s]
       @redirect_to = params[:ey_return_to_url]
       haml :plans
@@ -229,7 +233,7 @@ EOT
   
     get "/sso/customers/:customer_id/generators/:generator_id" do |customer_id, generator_id|
       #TODO: use a signature verification middleware instead?
-      raise "Signature invalid" unless EY::ApiHMAC.verify_for_sso(request.url, Lisonja.api_creds[:auth_id], Lisonja.api_creds[:auth_key])
+      raise "Signature invalid" unless EY::ApiHMAC.verify_for_sso(request.url, Lisonja.api_creds.auth_id, Lisonja.api_creds.auth_key)
       @customer = Lisonja.customers_hash[customer_id.to_s]
       @generator = @customer.compliment_generators.detect{ |g| g.id.to_s == generator_id.to_s }
       @redirect_to = params[:ey_return_to_url]
@@ -411,14 +415,34 @@ EOT
   end
 
   def self.connection
-    EY::ServicesAPI::Connection.new(Lisonja.api_creds[:auth_id], Lisonja.api_creds[:auth_key], "Lisonja")
+    @connection ||= EY::ServicesAPI::Connection.new(Lisonja.api_creds.auth_id, Lisonja.api_creds.auth_key, "Lisonja")
   end
 
+  def self.setup!
+    @connection = nil
+    conn = Model.connection
+    unless conn.table_exists?(:creds)
+      conn.create_table "creds", :force => true do |t|
+        t.string   "auth_id"
+        t.string   "auth_key"
+        t.datetime "created_at"
+        t.datetime "updated_at"
+      end
+    end
+  end
+  def self.teardown!
+    conn = Model.connection
+    conn.tables.each do |table_name|
+      conn.drop_table(table_name)
+    end
+  end
   def self.reset!
     @@services = {}
     @@customers_hash = {}
-    @@api_creds = {}
+    teardown!
+    setup!
   end
+
   def self.customers_hash
     @@customers_hash
   end
@@ -426,7 +450,11 @@ EOT
     @@services
   end
   def self.api_creds
-    @@api_creds
+    Lisonja::Creds.first
+  end
+  def self.save_creds(auth_id, auth_key)
+    raise "We already have creds!" if api_creds
+    Lisonja::Creds.create!(:auth_id => auth_id, :auth_key => auth_key)
   end
 
   def self.register_regular_service(service_registration_url)
@@ -472,14 +500,6 @@ EOT
     @@services[service_kind][:service_url] = service.url
   end
 
-  def self.save_creds(auth_id, auth_key)
-    @@api_creds[:auth_id] = auth_id
-    @@api_creds[:auth_key] = auth_key
-  end
-  def self.api_creds
-    @@api_creds
-  end
-
   def self.customers
     @@customers_hash.values
   end
@@ -490,4 +510,4 @@ EOT
 end
 
 require 'lisonja/generator'
-Lisonja.compliment_source = PartiallyStolenComplimentGenerator
+Lisonja.compliment_source = Lisonja::PartiallyStolenComplimentGenerator
