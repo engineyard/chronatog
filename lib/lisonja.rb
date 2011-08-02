@@ -465,17 +465,11 @@ EOT
 
     @@services[service_kind] = {}
     @@services[service_kind][:service_url] = service.url
-
-    #TODO: return a EY::ServicesAPI::Service object instead
-    Service.new(service_name, service_kind, @@services[service_kind][:service_url])
   end
 
   def self.save_creds(auth_id, auth_key)
     @@api_creds[:auth_id] = auth_id
     @@api_creds[:auth_key] = auth_key
-  end
-
-  class Service < Struct.new(:name, :service_kind, :service_url)
   end
 
   def self.customers
@@ -487,5 +481,5 @@ EOT
 
 end
 
-require File.expand_path("../generator", __FILE__)
+require 'lisonja/generator'
 Lisonja.compliment_source = PartiallyStolenComplimentGenerator
