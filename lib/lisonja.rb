@@ -206,7 +206,7 @@ EOT
     delete "/api/1/customers/:customer_id/compliment_generators/:generator_id" do |customer_id, generator_id|
       customer = Lisonja::Customer.find(customer_id)
       generator = customer.compliment_generators.find(generator_id)
-      generator.destroy
+      generator.decomission!
       content_type :json
       {}.to_json
     end
@@ -351,6 +351,7 @@ EOT
         t.string   "api_key"
         t.string   "messages_url"
         t.string   "generator_type"
+        t.datetime "decomissioned_at"
         t.datetime "last_billed_at"
         t.datetime "created_at"
         t.datetime "updated_at"
