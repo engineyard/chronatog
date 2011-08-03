@@ -5,7 +5,7 @@ require 'haml'
 require 'ey_api_hmac'
 require 'ey_services_api'
 require 'lisonja/models/model'
-%w( creds ).each do |model_name|
+%w( creds service ).each do |model_name|
   require "lisonja/models/#{model_name}"
 end
 
@@ -35,7 +35,7 @@ module Lisonja
           </div>
         EOT
       end
-      if !Lisonja.services["regular"]
+      if !Lisonja.regular_service
         to_output += <<-EOT
           <div id="basic">
           Register the Regular Lisonja service:<br/>
@@ -47,9 +47,9 @@ module Lisonja
           </div>
         EOT
       else
-        to_output += "Regular lisonja registered as #{Lisonja.services["regular"][:service_url]} <br/>"
+        to_output += "Regular lisonja registered as #{Lisonja.regular_service.url} <br/>"
       end
-      if !Lisonja.services["fancy"]
+      if !Lisonja.fancy_service
         to_output += <<-EOT
           <div id="configured">
           Register the Highly Configured Fancy Lisonja service:<br/>
@@ -61,7 +61,7 @@ module Lisonja
           </div>
         EOT
       else
-        to_output += "Fancy lisonja registered as #{Lisonja.services["fancy"][:service_url]} <br/>"
+        to_output += "Fancy lisonja registered as #{Lisonja.fancy_service.url} <br/>"
       end
       to_output += "<a href='/cron'>run billing cron</a> <br/>"
       to_output += "current customer info: <pre>#{Lisonja.customers_hash.to_yaml}</pre>"
@@ -428,6 +428,14 @@ EOT
         t.datetime "created_at"
         t.datetime "updated_at"
       end
+      conn.create_table "services", :force => true do |t|
+        t.string   "name"
+        t.string   "kind"
+        t.string   "state"
+        t.string   "url"
+        t.datetime "created_at"
+        t.datetime "updated_at"
+      end
     end
   end
   def self.teardown!
@@ -437,7 +445,6 @@ EOT
     end
   end
   def self.reset!
-    @@services = {}
     @@customers_hash = {}
     teardown!
     setup!
@@ -446,11 +453,14 @@ EOT
   def self.customers_hash
     @@customers_hash
   end
-  def self.services
-    @@services
-  end
   def self.api_creds
     Lisonja::Creds.first
+  end
+  def self.fancy_service
+    Lisonja::Service.where(:kind => "fancy").first
+  end
+  def self.regular_service
+    Lisonja::Service.where(:kind => "regular").first
   end
   def self.save_creds(auth_id, auth_key)
     raise "We already have creds!" if api_creds
@@ -494,17 +504,15 @@ EOT
   end
 
   def self.create_service(service_name, service_kind, registration_params, service_registration_url)
-    service = Lisonja.connection.register_service(service_registration_url, registration_params)
-
-    @@services[service_kind] = {}
-    @@services[service_kind][:service_url] = service.url
+    service = Lisonja::Service.create!(:name => service_name, :kind => service_kind, :state => 'unregistered')
+    remote_service = Lisonja.connection.register_service(service_registration_url, registration_params)
+    service.url = remote_service.url
+    service.state = "registered"
+    service.save!
   end
 
   def self.customers
     @@customers_hash.values
-  end
-  def self.services
-    @@services
   end
 
 end
