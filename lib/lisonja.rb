@@ -72,6 +72,11 @@ module Lisonja
       to_output
     end
 
+    get '/reset' do
+      Lisonja.reset!
+      "done <a href='/'>ok</a>"
+    end
+
     get "/cron" do
       invoices_billed = []
       Lisonja::Customer.all.each do |customer|

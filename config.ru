@@ -3,7 +3,7 @@ require 'bundler'
 Bundler.setup
 
 ENV["URL_FOR_LISONJA"] = "http://lisonja.dev"
-require File.expand_path("../lisonja", __FILE__)
+require File.expand_path("../lib/lisonja", __FILE__)
 
 Lisonja.reset!
-run Lisonja
+run Lisonja::Application

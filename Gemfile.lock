@@ -1,7 +1,18 @@
 PATH
+  remote: .
+  specs:
+    lisonja (0.1.TODO)
+      activerecord (= 3.0.9)
+      ey_sso
+      haml
+      sinatra
+      sqlite3
+
+PATH
   remote: ../../vendor/ey_api_hmac
   specs:
     ey_api_hmac (0.0.1)
+      rack-client
 
 PATH
   remote: ../../vendor/ey_services_api
@@ -19,18 +30,67 @@ PATH
 GEM
   remote: http://rubygems.org/
   specs:
-    haml (3.1.1)
+    ParseTree (3.0.7)
+      RubyInline (>= 3.7.0)
+      sexp_processor (>= 3.0.0)
+    RubyInline (3.9.0)
+      ZenTest (~> 4.3)
+    ZenTest (4.6.0)
+    activemodel (3.0.9)
+      activesupport (= 3.0.9)
+      builder (~> 2.1.2)
+      i18n (~> 0.5.0)
+    activerecord (3.0.9)
+      activemodel (= 3.0.9)
+      activesupport (= 3.0.9)
+      arel (~> 2.0.10)
+      tzinfo (~> 0.3.23)
+    activesupport (3.0.9)
+    addressable (2.2.6)
+    arel (2.0.10)
+    artifice (0.6)
+      rack-test
+    builder (2.1.2)
+    ey_sso (0.9.6)
+      addressable (~> 2.2.2)
+      artifice (~> 0.6)
+      halorgium-auth-hmac (~> 1.1.0)
+      json (~> 1.1)
+      mechanize (~> 0.9.3)
+      rack (~> 1.1)
+      randexp (~> 0.1.4)
+      rest-client (~> 1.6.0)
+      ruby-openid (~> 2.1.7)
+      sinatra (~> 1.0)
+      uuid (~> 2.3.1)
+    halorgium-auth-hmac (1.1.1.2010100601)
+    haml (3.1.2)
+    i18n (0.5.0)
     json (1.5.3)
+    macaddr (1.0.0)
+    mechanize (0.9.3)
+      nokogiri (>= 1.2.1)
     mime-types (1.16)
+    nokogiri (1.5.0)
     rack (1.3.0)
     rack-client (0.3.1.pre.g)
       rack (>= 1.0.0)
+    rack-test (0.6.1)
+      rack (>= 1.0)
+    randexp (0.1.5)
+      ParseTree
     rest-client (1.6.3)
       mime-types (>= 1.16)
+    ruby-openid (2.1.8)
+    sexp_processor (3.0.5)
     sinatra (1.2.6)
       rack (~> 1.1)
       tilt (< 2.0, >= 1.2.2)
+    sqlite3 (1.3.4)
     tilt (1.3.2)
+    tzinfo (0.3.29)
+    uuid (2.3.3)
+      macaddr (~> 1.0)
 
 PLATFORMS
   ruby
@@ -39,6 +99,4 @@ DEPENDENCIES
   ey_api_hmac!
   ey_services_api!
   ey_services_api_internal!
-  haml
-  json
-  sinatra
+  lisonja!
