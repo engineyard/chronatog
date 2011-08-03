@@ -5,7 +5,7 @@ require 'haml'
 require 'ey_api_hmac'
 require 'ey_services_api'
 require 'lisonja/models/model'
-%w( creds service ).each do |model_name|
+%w( creds service customer compliment_generator ).each do |model_name|
   require "lisonja/models/#{model_name}"
 end
 
@@ -64,8 +64,9 @@ module Lisonja
         to_output += "Fancy lisonja registered as #{Lisonja.fancy_service.url} <br/>"
       end
       to_output += "<a href='/cron'>run billing cron</a> <br/>"
-      to_output += "current customer info: <pre>#{Lisonja.customers_hash.to_yaml}</pre>"
-      Lisonja.customers_hash.values.each do |customer|
+      to_output += "current customer info: <pre>#{Lisonja::Customer.all.to_yaml}</pre>"
+      to_output += "current generator info: <pre>#{Lisonja::ComplimentGenerator.all.to_yaml}</pre>"
+      Lisonja::Customer.all.each do |customer|
         to_output += "<a href='/customers/#{customer.id}'>#{customer.name}</a>"
       end
       to_output
@@ -73,7 +74,7 @@ module Lisonja
 
     get "/cron" do
       invoices_billed = []
-      Lisonja.customers_hash.values.each do |customer|
+      Lisonja::Customer.all.each do |customer|
         if billed_info = customer.bill!
           invoices_billed << billed_info
         end
@@ -115,13 +116,13 @@ module Lisonja
 %h2 Generators:
 - @customer.compliment_generators.each do |compliment_generator|
   %a{:href => '/customers/'+@customer.id.to_s+'/generators/'+compliment_generator.id.to_s}
-    = compliment_generator.name
+    = compliment_generator.environment_name
 EOT
     end
 
     template :generator do
 <<-EOT
-%h1= @generator.name + " (" + @generator.id.to_s + ") "
+%h1= @generator.environment_name + " (" + @generator.id.to_s + ") "
 - if @recent_message
   %strong Sent:
   = @recent_message
@@ -135,21 +136,21 @@ EOT
     end
 
     get "/customers/:customer_id/generators/:generator_id" do |customer_id, generator_id|
-      @customer = Lisonja.customers_hash[customer_id.to_s]
-      @generator = @customer.compliment_generators.detect{|g| g.id.to_s == generator_id.to_s}
+      @customer = Lisonja::Customer.find(customer_id)
+      @generator = @customer.compliment_generators.find(generator_id)
       @recent_message = params[:message]
       haml :generator
     end
 
     post "/customers/:customer_id/generators/:generator_id/generate_compliment" do |customer_id, generator_id|
-      @customer = Lisonja.customers_hash[customer_id.to_s]
-      @generator = @customer.compliment_generators.detect{|g| g.id.to_s == generator_id.to_s}
+      @customer = Lisonja::Customer.find(customer_id)
+      @generator = @customer.compliment_generators.find(generator_id)
       generated = @generator.generate_and_send_compliment(params[:message_type])
       redirect "/customers/#{customer_id}/generators/#{generator_id}?message=#{URI.escape(generated)}"
     end
 
     get "/customers/:customer_id" do |customer_id|
-      @customer = Lisonja.customers_hash[customer_id.to_s]
+      @customer = Lisonja::Customer.find(customer_id)
       @recent_message = params[:message]
       if @customer
         haml :customer
@@ -159,12 +160,11 @@ EOT
     end
 
     post "/customers/:customer_id/generate_compliment" do |customer_id|
-      customer = Lisonja.customers_hash[customer_id.to_s]
-      #TODO: 1 main generator for complimenting all customers, instead of gen new one each time?
-      generator = ComplimentGenerator.generate(customer_id, "regular", nil, "TODO messages url...?")
-      generated = generator.generate_compliment!
-      customer.send_compliment(params[:message_type], generated)
-      redirect "/customers/#{customer.id}?message=#{URI.escape(generated)}"
+      @customer = Lisonja::Customer.find(customer_id)
+      generated = Lisonja.compliment_source.run!
+      message = EY::ServicesAPI::Message.new(:message_type => params[:message_type], :subject => generated)
+      Lisonja.connection.send_message(@customer.messages_url, message)
+      redirect "/customers/#{@customer.id}?message=#{URI.escape(generated)}"
     end
 
     post "/api/1/customers/:customer_id/compliment_generators" do |customer_id|
@@ -172,7 +172,7 @@ EOT
       provisioned_service = EY::ServicesAPI::ProvisionedServiceCreation.from_request(request.body.read)
 
       #do local persistence
-      customer = Lisonja.customers_hash[customer_id.to_s]
+      customer = Lisonja::Customer.find(customer_id)
       generator = customer.generate_generator(provisioned_service.environment.name, provisioned_service.messages_url)
 
       #sinatra stuff
@@ -180,7 +180,7 @@ EOT
       headers 'Location' => generator.url
 
       #response with json about self
-      provisioned_service.creation_response_hash do |presenter|
+      response_hash = provisioned_service.creation_response_hash do |presenter|
         if generator.service_kind == "fancy"
           presenter.configuration_url = generator.configuration_url
           presenter.configuration_required = true
@@ -193,19 +193,22 @@ EOT
         }
         presenter.url = generator.url
         presenter.message = EY::ServicesAPI::Message.new(:message_type => "status", :subject => generator.created_message)
-      end.to_json
+      end
+
+      response_hash.to_json
     end
 
     delete "/api/1/customers/:customer_id/compliment_generators/:generator_id" do |customer_id, generator_id|
-      customer = Lisonja.customers_hash[customer_id.to_s]
-      customer.compliment_generators.reject! {|g| g.id.to_s == generator_id.to_s}
+      customer = Lisonja::Customer.find(customer_id)
+      generator = customer.compliment_generators.find(generator_id)
+      generator.destroy
       content_type :json
       {}.to_json
     end
 
     get "/sso/customers/:customer_id" do |customer_id|
       raise "Signature invalid" unless EY::ApiHMAC.verify_for_sso(request.url, Lisonja.api_creds.auth_id, Lisonja.api_creds.auth_key)
-      @customer = Lisonja.customers_hash[customer_id.to_s]
+      @customer = Lisonja::Customer.find(customer_id)
       @redirect_to = params[:ey_return_to_url]
       haml :plans
     end
@@ -222,8 +225,9 @@ EOT
     end
 
     post "/sso/customers/:customer_id/choose_plan" do |customer_id|
-      @customer = Lisonja.customers_hash[customer_id.to_s]
+      @customer = Lisonja::Customer.find(customer_id)
       @customer.plan_type = params[:plan_type]
+      @customer.save!
 
       message = EY::ServicesAPI::Message.new(:message_type => 'status', :subject => "#{params[:plan_type]} Activated!")
       Lisonja.connection.send_message(@customer.messages_url, message)
@@ -234,8 +238,8 @@ EOT
     get "/sso/customers/:customer_id/generators/:generator_id" do |customer_id, generator_id|
       #TODO: use a signature verification middleware instead?
       raise "Signature invalid" unless EY::ApiHMAC.verify_for_sso(request.url, Lisonja.api_creds.auth_id, Lisonja.api_creds.auth_key)
-      @customer = Lisonja.customers_hash[customer_id.to_s]
-      @generator = @customer.compliment_generators.detect{ |g| g.id.to_s == generator_id.to_s }
+      @customer = Lisonja::Customer.find(customer_id)
+      @generator = @customer.compliment_generators.find(generator_id)
       @redirect_to = params[:ey_return_to_url]
       haml :generators
     end
@@ -252,138 +256,27 @@ EOT
     end
 
     post "/sso/customers/:customer_id/generators/:generator_id/choose_type" do |customer_id, generator_id|
-      @customer = Lisonja.customers_hash[customer_id.to_s]
-      @generator = @customer.compliment_generators.detect{ |g| g.id.to_s == generator_id.to_s }
+      @customer = Lisonja::Customer.find(customer_id)
+      @generator = @customer.compliment_generators.find(generator_id)
       @generator.generator_type = params[:generator_type]
+      @generator.save!
 
-      message = EY::ServicesAPI::Message.new(:message_type => 'status', :subject => "#{params[:generator_type]} now available for #{@generator.name}")
+      message = EY::ServicesAPI::Message.new(:message_type => 'status', :subject => "#{params[:generator_type]} now available for #{@generator.environment_name}")
       Lisonja.connection.send_message(@generator.messages_url, message)
 
       redirect params[:ey_return_to_url]
-    end
-
-
-    class ComplimentGenerator < Struct.new(:id, :service_kind, :name, :api_key, :messages_url, :customer_id, :generator_type)
-      def initialize(*args)
-        super(*args)
-        @created_at = Time.now
-      end
-      def url
-        "#{ENV["URL_FOR_LISONJA"]}/api/1/customers/#{customer_id}/compliment_generators/#{id}"
-      end
-      def configuration_url
-        "#{ENV["URL_FOR_LISONJA"]}/sso/customers/#{customer_id}/generators/#{id}"
-      end
-      def created_message
-        "Compliment Generator Generated!"
-      end
-      def generate_compliment!
-        Lisonja.compliment_source.run! #+ " for #{name}"
-      end
-      def self.generate(customer_id, service_kind, name, messages_url)
-        @@generators_count ||= 0
-        next_id = @@generators_count += 1
-        ComplimentGenerator.new(
-          next_id, 
-          service_kind,
-          name,
-          rand.to_s[2,10], 
-          messages_url,
-          customer_id,
-          "default")
-      end
-      def generate_and_send_compliment(message_type)
-        compliment = generate_compliment!
-        message = EY::ServicesAPI::Message.new(:message_type => message_type, :subject => compliment)
-        Lisonja.connection.send_message(self.messages_url, message)
-        compliment
-      end
-      def get_billable_usage!(at_time)
-        last_billed_at = @last_billed_at || @created_at
-        to_return = (at_time.to_i - last_billed_at.to_i)
-        @last_billed_at = at_time
-        to_return
-      end
-    end
-
-    class Customer < Struct.new(:id, :service_kind, :name, :api_url, :messages_url, :invoices_url, :plan_type)
-      def initialize(*args)
-        super(*args)
-        @created_at = Time.now
-      end
-      def url
-        "#{ENV["URL_FOR_LISONJA"]}/api/1/customers/#{id}"
-      end
-      def provisioned_services_url
-        "#{url}/compliment_generators"
-      end
-      def configuration_url
-        "#{ENV["URL_FOR_LISONJA"]}/sso/customers/#{id}"
-      end
-      def singup_message
-        "You enabled Lisonja. Well done #{name}!"
-      end
-      def compliment_generators
-        @compliment_generators ||= []
-      end
-      def generate_generator(env_name = nil, messages_url = nil)
-        generator = ComplimentGenerator.generate(id, service_kind, env_name, messages_url)
-        self.compliment_generators << generator
-        generator
-      end
-      def send_compliment(message_type, compliment)
-        message = EY::ServicesAPI::Message.new(:message_type => message_type, :subject => compliment)
-        Lisonja.connection.send_message(self.messages_url, message)
-      end
-      def self.create(customers_hash, service_kind, name, api_url = nil, messages_url = nil, invoices_url = nil)
-        @@customer_count ||= 0
-        next_id = @@customer_count += 1
-        customer = Customer.new(
-                      next_id, service_kind, name, api_url, messages_url, invoices_url, "default")
-        customers_hash[customer.id.to_s] = customer
-        customer
-      end
-      def bill!
-        last_billed_at = @last_billed_at || @created_at
-        billing_at = Time.now
-        #this service costs $0.01 per minute
-        total_price = 1 * (billing_at.to_i - last_billed_at.to_i) / 60
-        compliment_generators.each do |g|
-          usage_seconds = g.get_billable_usage!(billing_at)
-          #compliment generators costs $0.02 per second
-          usage_price = usage_seconds * 2
-          total_price += usage_price
-        end
-        if total_price > 0
-          line_item_description = "For service from #{last_billed_at} to #{billing_at}, "+
-                                    "includes #{compliment_generators.size} compliment generators."
-
-          invoice = EY::ServicesAPI::Invoice.new(
-            :total_amount_cents => total_price,
-            :line_item_description => line_item_description)
-          Lisonja.connection.send_invoice(invoices_url, invoice)
-
-          @last_billed_at = billing_at
-
-          #return info about charges made
-          [total_price, line_item_description]
-        else
-          #return no charge made
-          nil
-        end
-      end
-      def cancel!
-        bill!
-        @compliment_generators = []
-      end
     end
 
     post '/api/1/customers/:service_kind' do |service_kind|
       #parse the request
       service_account = EY::ServicesAPI::ServiceAccountCreation.from_request(request.body.read)
 
-      #do local persistence
-      customer = Customer.create(Lisonja.customers_hash, service_kind, service_account.name, service_account.url, service_account.messages_url, service_account.invoices_url)
+      service = Service.find_by_kind(service_kind)
+      customer = service.customers.create!(
+        :name => service_account.name,
+        :api_url => service_account.url,
+        :messages_url => service_account.messages_url,
+        :invoices_url => service_account.invoices_url)
 
       #sinatra stuff
       content_type :json
@@ -406,9 +299,9 @@ EOT
     end
 
     delete "/api/1/customers/:customer_id" do |customer_id|
-      @customer = Lisonja.customers_hash[customer_id.to_s]
+      @customer = Lisonja::Customer.find(customer_id)
       @customer.cancel!
-      Lisonja.customers_hash.delete(customer_id.to_s)
+      @customer.destroy
       content_type :json
       {}.to_json
     end
@@ -436,6 +329,27 @@ EOT
         t.datetime "created_at"
         t.datetime "updated_at"
       end
+      conn.create_table "customers", :force => true do |t|
+        t.references :service
+        t.string   "name"
+        t.string   "api_url"
+        t.string   "messages_url"
+        t.string   "invoices_url"
+        t.string   "plan_type"
+        t.datetime "last_billed_at"
+        t.datetime "created_at"
+        t.datetime "updated_at"
+      end
+      conn.create_table "compliment_generators", :force => true do |t|
+        t.references :customer
+        t.string   "environment_name"
+        t.string   "api_key"
+        t.string   "messages_url"
+        t.string   "generator_type"
+        t.datetime "last_billed_at"
+        t.datetime "created_at"
+        t.datetime "updated_at"
+      end
     end
   end
   def self.teardown!
@@ -445,14 +359,10 @@ EOT
     end
   end
   def self.reset!
-    @@customers_hash = {}
     teardown!
     setup!
   end
 
-  def self.customers_hash
-    @@customers_hash
-  end
   def self.api_creds
     Lisonja::Creds.first
   end
@@ -509,10 +419,6 @@ EOT
     service.url = remote_service.url
     service.state = "registered"
     service.save!
-  end
-
-  def self.customers
-    @@customers_hash.values
   end
 
 end
