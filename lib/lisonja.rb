@@ -278,7 +278,7 @@ EOT
         "Compliment Generator Generated!"
       end
       def generate_compliment!
-        Lisonja.compliment_source.run!
+        Lisonja.compliment_source.run! #+ " for #{name}"
       end
       def self.generate(customer_id, service_kind, name, messages_url)
         @@generators_count ||= 0
