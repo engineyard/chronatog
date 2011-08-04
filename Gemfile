@@ -6,9 +6,12 @@ gem 'haml'
 gem 'sinatra'
 gem 'sqlite3'
 
-path_prefix = "vendor"
-unless File.exists?(File.expand_path('vendor', __FILE__))
+if File.exists?(File.expand_path('../vendor', __FILE__))
+  path_prefix = "vendor"
+elsif File.exists?(File.expand_path('../../../vendor', __FILE__))
   path_prefix = "../../vendor"
+else
+  raise "no suitable path for ey_* gems"
 end
 
 gem 'ey_api_hmac', :path => "#{path_prefix}/ey_api_hmac"
