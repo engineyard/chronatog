@@ -4,6 +4,7 @@ gem 'activerecord', '3.0.9'
 gem 'haml'
 gem 'sinatra'
 gem 'sqlite3'
+gem 'pg'
 
 if File.exists?(File.expand_path('../vendor', __FILE__))
   path_prefix = "vendor"
