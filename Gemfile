@@ -1,7 +1,6 @@
 source 'http://rubygems.org'
 
 gem 'activerecord', '3.0.9'
-gem 'ey_sso'
 gem 'haml'
 gem 'sinatra'
 gem 'sqlite3'
