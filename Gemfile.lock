@@ -1,14 +1,4 @@
 PATH
-  remote: .
-  specs:
-    lisonja (0.1.TODO)
-      activerecord (= 3.0.9)
-      ey_sso
-      haml
-      sinatra
-      sqlite3
-
-PATH
   remote: ../../vendor/ey_api_hmac
   specs:
     ey_api_hmac (0.0.1)
@@ -96,7 +86,11 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
+  activerecord (= 3.0.9)
   ey_api_hmac!
   ey_services_api!
   ey_services_api_internal!
-  lisonja!
+  ey_sso
+  haml
+  sinatra
+  sqlite3
