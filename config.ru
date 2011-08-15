@@ -19,5 +19,5 @@ end
 $:.unshift File.expand_path("../lib", __FILE__)
 require 'lisonja'
 
-Lisonja.reset!
+Lisonja.setup!
 run Lisonja::Application
