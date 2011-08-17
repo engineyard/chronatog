@@ -1,3 +1,6 @@
+#TODO: remove this line when lisonja is release as gem
+$LOAD_PATH << File.expand_path('../', __FILE__)
+
 require 'sinatra'
 require 'json'
 require 'yaml'
