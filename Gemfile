@@ -7,4 +7,4 @@ gem 'sqlite3'
 gem 'pg'
 
 gem 'ey_api_hmac'
-gem 'ey_services_api', :git => "git@github.com:engineyard/ey_services_api.git"
+gem 'ey_services_api', :path => "vendor/gems/ey_services_api" # FIXME: remove the vendorized gem once we release it

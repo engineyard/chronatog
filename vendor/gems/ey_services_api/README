@@ -1,0 +1,5 @@
+ruby 1.9 is required to run the UNMOCKED specs
+
+specs should be able to run MOCKED with 1.8.7
+
+This gem needs to be 1.8.7 compatible
