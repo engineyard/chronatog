@@ -1,12 +1,12 @@
 module Lisonja
   class ComplimentGenerator < Model
     belongs_to :customer
-    
-    def url
-      "#{ENV["URL_FOR_LISONJA"]}/api/1/customers/#{customer_id}/compliment_generators/#{id}"
+
+    def url(base_url)
+      "#{base_url}/api/1/customers/#{customer_id}/compliment_generators/#{id}"
     end
-    def configuration_url
-      "#{ENV["URL_FOR_LISONJA"]}/sso/customers/#{customer_id}/generators/#{id}"
+    def configuration_url(base_url)
+      "#{base_url}/sso/customers/#{customer_id}/generators/#{id}"
     end
     def created_message
       "Compliment Generator Generated!"

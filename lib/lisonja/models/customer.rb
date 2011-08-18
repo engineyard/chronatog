@@ -3,14 +3,14 @@ module Lisonja
     belongs_to :service
     has_many :compliment_generators
 
-    def url
-      "#{ENV["URL_FOR_LISONJA"]}/api/1/customers/#{id}"
+    def url(base_url)
+      "#{base_url}/api/1/customers/#{id}"
     end
-    def provisioned_services_url
-      "#{url}/compliment_generators"
+    def provisioned_services_url(base_url)
+      "#{url(base_url)}/compliment_generators"
     end
-    def configuration_url
-      "#{ENV["URL_FOR_LISONJA"]}/sso/customers/#{id}"
+    def configuration_url(base_url)
+      "#{base_url}/sso/customers/#{id}"
     end
     def singup_message
       "You enabled Lisonja. Well done #{name}!"

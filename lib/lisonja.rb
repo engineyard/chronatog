@@ -96,12 +96,12 @@ module Lisonja
     end
 
     post "/register" do
-      Lisonja.register_regular_service(params[:service_registration_url])
+      Lisonja.register_regular_service(params[:service_registration_url], base_url)
       redirect "/"
     end
 
     post "/registerfancy" do
-      Lisonja.register_fancy_service(params[:service_registration_url])
+      Lisonja.register_fancy_service(params[:service_registration_url], base_url)
       redirect "/"
     end
 
@@ -185,12 +185,12 @@ EOT
 
       #sinatra stuff
       content_type :json
-      headers 'Location' => generator.url
+      headers 'Location' => generator.url(base_url)
 
       #response with json about self
       response_hash = provisioned_service.creation_response_hash do |presenter|
         if generator.service_kind == "fancy"
-          presenter.configuration_url = generator.configuration_url
+          presenter.configuration_url = generator.configuration_url(base_url)
           presenter.configuration_required = true
         else
           presenter.configuration_required = false
@@ -199,7 +199,7 @@ EOT
           "COMPLIMENTS_API_KEY" => generator.api_key,
           "CIA_BACKDOOR_PASSWORD" => "toast"
         }
-        presenter.url = generator.url
+        presenter.url = generator.url(base_url)
         presenter.message = EY::ServicesAPI::Message.new(:message_type => "status", :subject => generator.created_message)
       end
 
@@ -288,18 +288,18 @@ EOT
 
       #sinatra stuff
       content_type :json
-      headers 'Location' => customer.url
+      headers 'Location' => customer.url(base_url)
 
       #response with json about self
       response_hash = service_account.creation_response_hash do |presenter|
         if service_kind == "fancy"
           presenter.configuration_required = true
-          presenter.configuration_url = customer.configuration_url
+          presenter.configuration_url = customer.configuration_url(base_url)
         else
           presenter.configuration_required = false
         end
-        presenter.provisioned_services_url = customer.provisioned_services_url
-        presenter.url = customer.url
+        presenter.provisioned_services_url = customer.provisioned_services_url(base_url)
+        presenter.url = customer.url(base_url)
         presenter.message = EY::ServicesAPI::Message.new(:message_type => "status", :subject => customer.singup_message)
       end
 
@@ -313,15 +313,24 @@ EOT
       content_type :json
       {}.to_json
     end
+
+    def base_url
+      uri = URI.parse(request.url)
+      uri.to_s.gsub(uri.request_uri, '')
+    end
+
   end
 
   def self.connection
     @connection ||= EY::ServicesAPI::Connection.new(Lisonja.api_creds.auth_id, Lisonja.api_creds.auth_key, "Lisonja")
   end
 
-  def self.setup!
+  def self.ensure_tmp_dir
     require 'fileutils'
     FileUtils.mkdir_p(File.expand_path("../../tmp/", __FILE__))
+  end
+  def self.setup!
+    ensure_tmp_dir
     @connection = nil
     conn = Model.connection
     unless conn.table_exists?(:creds)
@@ -364,6 +373,7 @@ EOT
     end
   end
   def self.teardown!
+    ensure_tmp_dir
     conn = Model.connection
     conn.tables.each do |table_name|
       conn.drop_table(table_name)
@@ -388,21 +398,21 @@ EOT
     Lisonja::Creds.create!(:auth_id => auth_id, :auth_key => auth_key)
   end
 
-  def self.register_regular_service(service_registration_url)
-    create_service("Lisonja", "regular", regular_service_registration_params, service_registration_url)
+  def self.register_regular_service(service_registration_url, base_url)
+    create_service("Lisonja", "regular", regular_service_registration_params(base_url), service_registration_url)
   end
 
-  def self.register_fancy_service(service_registration_url)
-    create_service("Lisonja-Configured", "fancy", fancy_service_registration_params, service_registration_url)
+  def self.register_fancy_service(service_registration_url, base_url)
+    create_service("Lisonja-Configured", "fancy", fancy_service_registration_params(base_url), service_registration_url)
   end
 
-  def self.regular_service_registration_params
+  def self.regular_service_registration_params(base_url)
     {
       :name => "Lisonja", 
       :description => "my compliments to the devops", 
-      :service_accounts_url =>     "#{ENV["URL_FOR_LISONJA"]}/api/1/customers/regular",
-      :home_url =>                 "#{ENV["URL_FOR_LISONJA"]}/",
-      :terms_and_conditions_url => "#{ENV["URL_FOR_LISONJA"]}/terms",
+      :service_accounts_url =>     "#{base_url}/api/1/customers/regular",
+      :home_url =>                 "#{base_url}/",
+      :terms_and_conditions_url => "#{base_url}/terms",
       :vars => [
         "COMPLIMENTS_API_KEY",
         "CIA_BACKDOOR_PASSWORD"
@@ -410,13 +420,13 @@ EOT
     }
   end
 
-  def self.fancy_service_registration_params
+  def self.fancy_service_registration_params(base_url)
     {
       :name => "Lisonja-Configured", 
       :description => "my compliments to the devops", 
-      :service_accounts_url =>     "#{ENV["URL_FOR_LISONJA"]}/api/1/customers/fancy",
-      :home_url =>                 "#{ENV["URL_FOR_LISONJA"]}/",
-      :terms_and_conditions_url => "#{ENV["URL_FOR_LISONJA"]}/terms",
+      :service_accounts_url =>     "#{base_url}/api/1/customers/fancy",
+      :home_url =>                 "#{base_url}/",
+      :terms_and_conditions_url => "#{base_url}/terms",
       :vars => [
         "COMPLIMENTS_API_KEY",
         "CIA_BACKDOOR_PASSWORD"
