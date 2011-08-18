@@ -320,6 +320,8 @@ EOT
   end
 
   def self.setup!
+    require 'fileutils'
+    FileUtils.mkdir_p(File.expand_path("../../tmp/", __FILE__))
     @connection = nil
     conn = Model.connection
     unless conn.table_exists?(:creds)
