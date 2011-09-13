@@ -8,3 +8,5 @@ gem 'pg'
 
 gem 'ey_api_hmac'
 gem 'ey_services_api', :path => "vendor/gems/ey_services_api" # FIXME: remove the vendorized gem once we release it
+
+gem 'rufus-scheduler', :require 'rufus/scheduler'

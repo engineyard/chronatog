@@ -1,4 +1,4 @@
-module Lisonja
+module Chronos
   class Service < Model
     has_many :customers
   end

@@ -1,13 +1,13 @@
 Gem::Specification.new do |s|
-  s.name        = "lisonja"
+  s.name        = "chronos"
   s.version     = "0.1.TODO"
   s.authors     = ["Jacob & Others"]
   s.email       = ["jacob@engineyard.com"]
   s.homepage    = ""
-  s.summary     = %q{TODO: Write a gem summary}
-  s.description = %q{TODO: Write a gem description}
+  s.summary     = %q{TODO: Web cron as a service.}
+  s.description = %q{TODO: Web cron as a service. Engine Yard's partner integration example.}
 
-  s.rubyforge_project = "lisonja"
+  s.rubyforge_project = "chronos"
 
   s.files         = `git ls-files`.split("\n")
   # s.test_files    = `git ls-files -- {test,spec,features}/*`.split("\n")
