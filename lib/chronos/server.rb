@@ -42,6 +42,8 @@ module Chronos::Server
     #################
 
     post '/api/1/customers' do
+      #TODO: hmac!
+
       #parse the request
       service_account = EY::ServicesAPI::ServiceAccountCreation.from_request(request.body.read)
 
@@ -69,6 +71,8 @@ module Chronos::Server
     end
 
     delete "/api/1/customers/:customer_id" do |customer_id|
+      #TODO: hmac!
+
       @customer = Customer.find(customer_id)
       @customer.cancel!
       @customer.destroy
@@ -77,6 +81,8 @@ module Chronos::Server
     end
 
     post "/api/1/customers/:customer_id/schedulers" do |customer_id|
+      #TODO: hmac!
+
       #parse the request
       provisioned_service = EY::ServicesAPI::ProvisionedServiceCreation.from_request(request.body.read)
 
@@ -98,7 +104,8 @@ module Chronos::Server
         presenter.configuration_required = false
         presenter.vars = {
           "CHRONOS_AUTH_ID"  => scheduler.client_auth_id,
-          "CHRONOS_AUTH_KEY" => scheduler.client_auth_key
+          "CHRONOS_AUTH_KEY" => scheduler.client_auth_key,
+          "CHRONOS_SERVICE_URL" => "#{base_url}/chronosapi/1/jobs",
         }
         presenter.url = scheduler.url(base_url)
         presenter.message = EY::ServicesAPI::Message.new(:message_type => "status", :subject => scheduler.created_message)
@@ -108,6 +115,8 @@ module Chronos::Server
     end
 
     delete "/api/1/customers/:customer_id/schedulers/:job_id" do |customer_id, job_id|
+      #TODO: hmac!
+
       customer = Customer.find(customer_id)
       scheduler = customer.schedulers.find(job_id)
       scheduler.decomission!
@@ -155,6 +164,24 @@ EOT
     %option{:value => 'best compliments'} best compliments
   %input{:value=>'Continue', :type=>'submit'}
 EOT
+    end
+
+    ##################
+    # Actual Service #
+    ##################
+
+    post "/chronosapi/1/jobs" do
+      #TODO: hmac the other way!
+      #1. lookup the scheduler by auth_id
+      #2. add a job to the scheduler based on the params given
+      {}.to_json
+    end
+
+    get "/chronosapi/1/jobs" do
+      #TODO: hmac the other way!
+      #1. lookup the scheduler by auth_id
+      #2. list jobs for that scheduler
+      [].to_json
     end
 
     ######################
@@ -220,7 +247,7 @@ EOT
       :service_accounts_url =>     "#{base_url}/api/1/customers",
       :home_url =>                 "#{base_url}/",
       :terms_and_conditions_url => "#{base_url}/terms",
-      :vars => ["CHRONOS_AUTH_ID", "CHRONOS_AUTH_KEY"]
+      :vars => ["CHRONOS_AUTH_ID", "CHRONOS_AUTH_KEY", "CHRONOS_SERVICE_URL"]
     }
   end
 

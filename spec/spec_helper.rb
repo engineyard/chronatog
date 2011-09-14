@@ -1,4 +1,5 @@
 require 'chronos'
+require 'chronos/client'
 require 'chronos/server'
 
 RSpec.configure do |config|

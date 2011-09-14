@@ -1,4 +1,4 @@
-require File.expand_path('../spec_helper', __FILE__)
+require 'spec_helper'
 
 describe "customers" do
   before do
@@ -23,21 +23,22 @@ describe "customers" do
           @mock_backend.create_provisioned_service
         end
 
-        it "creates a scheduler" do
-          @customer.schedulers.reload.size.should eq 1
-          @scheduler = @customer.schedulers.reload.first
+        describe "creating a job" do
+          before do
+            provisioned_service = @mock_backend.created_provisioned_service
+            provisioned_service['vars'].each do |k, v|
+              ENV[k] = v
+            end
+            Chronos::Client.connection.backend = Chronos::Server::Application
+            Chronos::Client.connection.create_job("somecallback", "someschedule")
+          end
 
-          @scheduler.should_not be_nil
-          @scheduler.decomissioned_at.should be_nil
-          #TODO: assert more on the scheduler
-        end
+          it "works" do
+            job_listing = Chronos::Client.connection.list_jobs
 
-        it "can handle a delete" do
-          @mock_backend.destroy_provisioned_service
-          @customer.reload
-
-          @scheduler = @customer.schedulers.reload.first
-          @scheduler.decomissioned_at.should_not be_nil
+            pending "implement the server"
+            job_listing.should eq [{:callback_url => "somecallback", :schedule => "someschedule"}]
+          end
         end
       end
     end

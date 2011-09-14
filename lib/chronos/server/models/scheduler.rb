@@ -5,6 +5,11 @@ module Chronos::Server
     end
     belongs_to :customer
 
+    after_initialize do
+      self.client_auth_id ||= SecureRandom.hex(7)
+      self.client_auth_key ||= SecureRandom.hex(13)
+    end
+
     def self.setup!
       # @scheduler ||= Rufus::Scheduler.start_new
       # all.each do |scheduled_job|
