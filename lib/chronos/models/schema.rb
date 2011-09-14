@@ -30,7 +30,9 @@ module Chronos
         conn.create_table "schedulers", :force => true do |t|
           t.references :customer
           t.string   "environment_name"
-          t.string   "api_key"
+          t.string   "app_name"
+          t.string   "client_auth_id"
+          t.string   "client_auth_key"
           t.string   "messages_url"
           t.text     "job"
           t.datetime "decomissioned_at"

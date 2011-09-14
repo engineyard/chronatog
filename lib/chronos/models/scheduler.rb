@@ -6,31 +6,31 @@ module Chronos
     belongs_to :customer
 
     def self.setup!
-      @scheduler ||= Rufus::Scheduler.start_new
-      all.each do |scheduled_job|
-        scheduled_job.schedule
-      end
+      # @scheduler ||= Rufus::Scheduler.start_new
+      # all.each do |scheduled_job|
+      #   scheduled_job.schedule
+      # end
     end
 
     def self.teardown!
-      @scheduler.stop
+      # @scheduler.stop
     end
 
     def self.add(customer, env_name, job)
-      new_job_cheduled = customer.schedulers.create!(
-        :environment_name => env_name,
-        :api_key => rand.to_s[2,10],
-        :messages_url => messages_url,
-        :job => job
-      )
-      new_job_scheduled.schedule
+      # new_job_cheduled = customer.schedulers.create!(
+      #   :environment_name => env_name,
+      #   :api_key => rand.to_s[2,10],
+      #   :messages_url => messages_url,
+      #   :job => job
+      # )
+      # new_job_scheduled.schedule
     end
 
     def schedule
-      Scheduler.scheduler.cron job[:cron], :tag => id do
-        Net::HTTP.get(URI.parse(job[:uri]))
-      end
-      self
+      # Scheduler.scheduler.cron job[:cron], :tag => id do
+      #   Net::HTTP.get(URI.parse(job[:uri]))
+      # end
+      # self
     end
 
     def url(base_url)
@@ -68,7 +68,7 @@ module Chronos
 
     def decomission!
       self.decomissioned_at = Time.now
-      Scheduler.scheduler.find_by_tag(id).first.unschedule
+      # Scheduler.scheduler.find_by_tag(id).first.unschedule
       save!
     end
 

@@ -23,84 +23,55 @@ module Chronos
     disable :dump_errors
     disable :show_exceptions
 
+    ########################
+    # Public Facing Web UI #
+    ########################
+
     get "/" do
-      to_output = ""
-      if !Chronos.regular_service
-        to_output += <<-EOT
-          <div id="basic">
-          Register the Regular Chronos service:<br/>
-            <form action="/register" method="POST">
-              <label for="service_registration_url">Service Registration API URL</label>
-              <input id="service_registration_url" name="service_registration_url" type="text" />
-              <input value="Register" type="submit" />
-            </form>
-          </div>
-        EOT
-      else
-        to_output += "Regular Chronos registered as #{Chronos.regular_service.url} <br/>"
-      end
-      to_output += "<a href='/cron'>run billing cron</a> <br/>"
-      to_output += "current customer info: <pre>#{Chronos::Customer.all.to_yaml}</pre>"
-      #to_output += "current generator info: <pre>#{Chronos::ComplimentGenerator.all.to_yaml}</pre>"
-      Chronos::Customer.all.each do |customer|
-        to_output += "<a href='/customers/#{customer.id}'>#{customer.name}</a>"
-      end
-      to_output
-    end
-
-    get "/bill" do
-      invoices_billed = []
-      Chronos::Customer.all.each do |customer|
-        if billed_info = customer.bill!
-          invoices_billed << billed_info
-        end
-      end
-      "Just billed: #{invoices_billed.to_yaml}"
-    end
-
-    post "/register" do
-      Chronos.register_service(params[:service_registration_url], base_url)
-      redirect "/"
+      "This is Chronos, an example service."
     end
 
     get "/terms" do
       "Agree to our terms, or else..."
     end
 
-    template :customer do
-<<-EOT
-%h1= @customer.name + " (" + @customer.id.to_s + ") "
-- if @recent_message
-  %strong Sent:
-  = @recent_message
-%form{:action=>"/customers/"+@customer.id.to_s+"/generate_compliment", :method=>'POST'}
-  %select{:name => 'message_type'}
-    %option{:value => 'alert'} Alert
-    %option{:value => 'notification'} Notification
-    %option{:value => 'status'} Status
-  %input{:value=>'Compliment the Customer', :type=>'submit'}
-%h2 Generators:
-- @customer.compliment_generators.each do |compliment_generator|
-  %a{:href => '/customers/'+@customer.id.to_s+'/generators/'+compliment_generator.id.to_s}
-    = compliment_generator.environment_name
-EOT
-    end
+    #################
+    # EY Facing API #
+    #################
 
-    get "/customers/:customer_id" do |customer_id|
-      @customer = Chronos::Customer.find(customer_id)
-      @recent_message = params[:message]
-      if @customer
-        haml :customer
-      else
-        halt 404, 'nonesuch customer'
+    post '/api/1/customers' do
+      #parse the request
+      service_account = EY::ServicesAPI::ServiceAccountCreation.from_request(request.body.read)
+
+      service = Service.first || (raise "service not setup")
+      customer = service.customers.create!(
+        :name => service_account.name,
+        :api_url => service_account.url,
+        :messages_url => service_account.messages_url,
+        :invoices_url => service_account.invoices_url)
+
+      #sinatra stuff
+      content_type :json
+      headers 'Location' => customer.url(base_url)
+
+      #response with json about self
+      response_hash = service_account.creation_response_hash do |presenter|
+        presenter.configuration_required = false
+        presenter.configuration_url = customer.configuration_url(base_url)
+        presenter.provisioned_services_url = customer.provisioned_services_url(base_url)
+        presenter.url = customer.url(base_url)
+        presenter.message = EY::ServicesAPI::Message.new(:message_type => "status", :subject => customer.singup_message)
       end
+
+      response_hash.to_json
     end
 
-    post "/customers/:customer_id/schedulers" do |customer_id|
+    delete "/api/1/customers/:customer_id" do |customer_id|
       @customer = Chronos::Customer.find(customer_id)
-      message = EY::ServicesAPI::Message.new(:message_type => params[:message_type], :subject => generated)
-      Chronos.connection.send_message(@customer.messages_url, message)
-      redirect "/customers/#{@customer.id}?message=#{URI.escape(generated)}"
+      @customer.cancel!
+      @customer.destroy
+      content_type :json
+      {}.to_json
     end
 
     post "/api/1/customers/:customer_id/schedulers" do |customer_id|
@@ -109,21 +80,26 @@ EOT
 
       #do local persistence
       customer = Chronos::Customer.find(customer_id)
-      job = customer.add_scheduled_job(provisioned_service.environment.name, provisioned_service.messages_url)
+      scheduler = customer.schedulers.create!(
+        :environment_name => provisioned_service.environment.name,
+        :app_name => provisioned_service.app.name,
+        :messages_url => provisioned_service.messages_url
+      )
+      # job = customer.add_scheduled_job(provisioned_service.environment.name, provisioned_service.messages_url)
 
       #sinatra stuff
       content_type :json
-      headers 'Location' => job.url(base_url)
+      headers 'Location' => scheduler.url(base_url)
 
       #response with json about self
       response_hash = provisioned_service.creation_response_hash do |presenter|
         presenter.configuration_required = false
         presenter.vars = {
-          "CHRONOS_AUTH_ID"  => "",
-          "CHRONOS_AUTH_KEY" => ""
+          "CHRONOS_AUTH_ID"  => scheduler.client_auth_id,
+          "CHRONOS_AUTH_KEY" => scheduler.client_auth_key
         }
-        presenter.url = job.url(base_url)
-        presenter.message = EY::ServicesAPI::Message.new(:message_type => "status", :subject => job.created_message)
+        presenter.url = scheduler.url(base_url)
+        presenter.message = EY::ServicesAPI::Message.new(:message_type => "status", :subject => scheduler.created_message)
       end
 
       response_hash.to_json
@@ -136,6 +112,10 @@ EOT
       content_type :json
       {}.to_json
     end
+
+    #############################
+    # EY facing SSO/Customer UI #
+    #############################
 
     get "/sso/customers/:customer_id" do |customer_id|
       raise "Signature invalid" unless EY::ApiHMAC::SSO.authenticated?(request.url, Chronos.api_creds.auth_id, Chronos.api_creds.auth_key)
@@ -175,14 +155,9 @@ EOT
 EOT
     end
 
-
-    delete "/api/1/customers/:customer_id" do |customer_id|
-      @customer = Chronos::Customer.find(customer_id)
-      @customer.cancel!
-      @customer.destroy
-      content_type :json
-      {}.to_json
-    end
+    ######################
+    # Sintra app helpers #
+    ######################
 
     def base_url
       uri = URI.parse(request.url)
@@ -191,8 +166,12 @@ EOT
 
   end
 
+  ##################################
+  # DB and EY API Connection setup #
+  ##################################
+
   def self.connection
-    @connection ||= EY::ServicesAPI::Connection.new(Chronos.api_creds.auth_id, Chronos.api_creds.auth_key, "Chronos")
+    EY::ServicesAPI.connection
   end
 
   def self.ensure_tmp_dir
@@ -204,6 +183,9 @@ EOT
     ensure_tmp_dir
     Schema.setup!
     Scheduler.setup!
+    if api_creds
+      EY::ServicesAPI.setup!(:auth_id => api_creds.auth_id, :auth_key => api_creds.auth_key)
+    end
   end
 
   def self.teardown!
@@ -217,20 +199,14 @@ EOT
     setup!
   end
 
-  def self.api_creds
-    @creds ||= Credentials.load
-  end
+  ####################################
+  # Registering this service with EY #
+  ####################################
 
-  def self.regular_service
-    Chronos::Service.where(:kind => "regular").first
-  end
-
-  def self.save_creds(auth_id, auth_key)
-    raise "We already have creds!" if api_creds
-    Chronos::Creds.create!(:auth_id => auth_id, :auth_key => auth_key)
-  end
+  #TODO: make a rake task for registering
 
   def self.register_service(service_registration_url, base_url)
+    #TODO: raise if we don't have any credentials
     create_service("Chronos", service_registration_params(base_url), service_registration_url)
   end
 
@@ -238,7 +214,7 @@ EOT
     {
       :name => "Chronos",
       :description => "Web cron as a service.",
-      :service_accounts_url =>     "#{base_url}/api/1/customers/regular",
+      :service_accounts_url =>     "#{base_url}/api/1/customers",
       :home_url =>                 "#{base_url}/",
       :terms_and_conditions_url => "#{base_url}/terms",
       :vars => ["CHRONOS_AUTH_ID", "CHRONOS_AUTH_KEY"]
@@ -251,12 +227,35 @@ EOT
     service.url = remote_service.url
     service.state = "registered"
     service.save!
+    service
+  end
+
+  #################################
+  # Credentials for talking to EY #
+  #################################
+
+  #TODO: make a rake task for saving credentials (takes args)
+
+  def self.api_creds
+    @creds ||= Credentials.load
+  end
+
+  def self.save_creds(auth_id, auth_key)
+    Credentials.write!(:auth_id => auth_id, :auth_key => auth_key)
   end
 
   class Credentials < Struct.new(:auth_id, :auth_key)
+    CONFIG_PATH = File.expand_path('../../config/credentials.yml', __FILE__)
     def self.load
-      creds = YAML.load_file(File.expand_path('../../config/credentials.yml', __FILE__))
-      Creds.new(:auth_id => creds['CHRONOS_PARTNER_AUTH_ID'], :auth_key => creds['CHRONOS_PARTNER_AUTH_KEY'])
+      if File.exists?(CONFIG_PATH)
+        creds = YAML.load_file(CONFIG_PATH)
+        Credentials.new(creds[:auth_id], creds[:auth_key])
+      end
+    end
+    def self.write!(creds)
+      File.open(CONFIG_PATH, "w") do |fp|
+        fp.write(creds.to_yaml)
+      end
     end
   end
 end
