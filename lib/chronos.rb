@@ -177,6 +177,7 @@ EOT
   def self.ensure_tmp_dir
     require 'fileutils'
     FileUtils.mkdir_p(File.expand_path("../../tmp/", __FILE__))
+    FileUtils.mkdir_p(File.expand_path("../../config/", __FILE__))
   end
 
   def self.setup!
