@@ -1,4 +1,4 @@
-module Chronos
+module Chronos::Server
   class Schema
     def self.setup!
       conn = Model.connection

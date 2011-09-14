@@ -1,4 +1,4 @@
-module Chronos
+module Chronos::Server
   class Scheduler < Model
     class << self
       attr_accessor :scheduler

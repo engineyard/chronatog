@@ -1,4 +1,4 @@
-module Chronos
+module Chronos::Server
   class Customer < Model
     belongs_to :service
     has_many :schedulers

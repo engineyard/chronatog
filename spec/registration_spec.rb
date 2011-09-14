@@ -7,15 +7,15 @@ describe "setup" do
 
   describe "with the service registered" do
     before do
-      Chronos.save_creds(@mock_backend.partner[:auth_id], @mock_backend.partner[:auth_key])
+      Chronos::Server.save_creds(@mock_backend.partner[:auth_id], @mock_backend.partner[:auth_key])
       base_url = "http://chronos.local"
-      Chronos.register_service(@mock_backend.partner[:registration_url], base_url)
+      Chronos::Server.register_service(@mock_backend.partner[:registration_url], base_url)
     end
 
     it "creates a service" do
-      Chronos::Service.count.should eq 1
-      Chronos::Service.first.url.should_not be_nil
-      Chronos::Service.first.state.should eq "registered"
+      Chronos::Server::Service.count.should eq 1
+      Chronos::Server::Service.first.url.should_not be_nil
+      Chronos::Server::Service.first.state.should eq "registered"
     end
 
     it "can be de-registered" do
