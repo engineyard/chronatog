@@ -1,4 +1,4 @@
-require 'spec_helper'
+require File.join( File.dirname(__FILE__), "spec_helper" )
 
 describe "setup" do
   before do
@@ -7,9 +7,9 @@ describe "setup" do
 
   describe "with the service registered" do
     before do
-      Chronos::Server.save_creds(@mock_backend.partner[:auth_id], @mock_backend.partner[:auth_key])
+      # Chronos::Eyintegration.save_creds(@mock_backend.partner[:auth_id], @mock_backend.partner[:auth_key])
       base_url = "http://chronos.local"
-      Chronos::Server.register_service(@mock_backend.partner[:registration_url], base_url)
+      Chronos::Eyintegration.register_service(@mock_backend.partner[:registration_url], base_url)
     end
 
     it "creates a service" do

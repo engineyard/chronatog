@@ -7,9 +7,9 @@ describe "customers" do
 
   context "with the service registered" do
     before do
-      Chronos::Server.save_creds(@mock_backend.partner[:auth_id], @mock_backend.partner[:auth_key])
+      # Chronos::Eyintegration.save_creds(@mock_backend.partner[:auth_id], @mock_backend.partner[:auth_key])
       base_url = "http://chronos.local"
-      @service = Chronos::Server.register_service(@mock_backend.partner[:registration_url], base_url)
+      @service = Chronos::Eyintegration.register_service(@mock_backend.partner[:registration_url], base_url)
     end
 
     describe "with a customer" do
