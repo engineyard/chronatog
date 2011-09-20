@@ -1,46 +1,32 @@
-require 'spec_helper'
+require File.join( File.dirname(__FILE__), "spec_helper" )
 
-describe "customers" do
-  before do
-    @mock_backend = EY::ServicesAPI.mock_backend
-  end
+describe "creating a job" do
 
-  context "with the service registered" do
+  describe "I have credentials" do
     before do
-      # Chronos::Eyintegration.save_creds(@mock_backend.partner[:auth_id], @mock_backend.partner[:auth_key])
-      base_url = "http://chronos.local"
-      @service = Chronos::Eyintegration.register_service(@mock_backend.partner[:registration_url], base_url)
+      @customer = Chronos::Server::Customer.create!(:name => "some-customer")
+      scheduler = @customer.schedulers.create!
+      Chronos::Client.setup!("http://chronos.local/chronosapi/1/jobs", scheduler.auth_username, scheduler.auth_password)
     end
 
-    describe "with a customer" do
+    describe "client mocked to talk to in-mem rack server" do
       before do
-        @mock_backend.create_service_account
-        @customer = @service.reload.customers.first
+        Chronos::Client.connection.backend = Chronos::Server::Application
       end
 
-      describe "when provisioned" do
+      describe "I create a job" do
         before do
-          @mock_backend.create_provisioned_service
+          Chronos::Client.connection.create_job("http://example.local/my/callback/url", "*/2 * * * *") #callback every 2 minutes
         end
 
-        describe "creating a job" do
-          before do
-            provisioned_service = @mock_backend.created_provisioned_service
-            provisioned_service['vars'].each do |k, v|
-              ENV[k] = v
-            end
-            Chronos::Client.connection.backend = Chronos::Server::Application
-            Chronos::Client.connection.create_job("somecallback", "someschedule")
-          end
-
-          it "works" do
-            job_listing = Chronos::Client.connection.list_jobs
-
-            pending "implement the server"
-            job_listing.should eq [{:callback_url => "somecallback", :schedule => "someschedule"}]
-          end
+        it "should show in my job list" do
+          jobs = Chronos::Client.connection.list_jobs
+          jobs.size.should eq 1
+          jobs.first['callback_url'].should eq "http://example.local/my/callback/url"
+          jobs.first['schedule'].should eq "*/2 * * * *"
         end
       end
+
     end
 
   end

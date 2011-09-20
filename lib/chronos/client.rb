@@ -3,39 +3,78 @@ require 'ey_api_hmac'
 module Chronos
   module Client
 
-    def self.connection
-      @connection ||= Connection.new(env_var("CHRONOS_AUTH_ID"), env_var("CHRONOS_AUTH_KEY"))
+    def self.setup!(service_url, auth_username, auth_password)
+      @connection ||= Connection.new(service_url, auth_username, auth_password)
     end
 
-    class Connection < EY::ApiHMAC::BaseConnection
-      #TODO auth!
+    def self.connection
+      @connection or raise "connection not setup! yet"
+    end
 
-      def create_job(callback_url, job_schedule)
-        post(Chronos::Client.chronos_service_url, {:callback_url => callback_url, :job_schedule => job_schedule})
+    class Connection
+      def initialize(service_url, auth_username, auth_password)
+        @service_url = service_url
+        @creds = [auth_username, auth_password]
+        @standard_headers = {
+          'CONTENT_TYPE' => 'application/json',
+          'Accept' => 'application/json'
+        }
       end
 
-      def destroy_job(job_url)
-        delete(job_url)
-      end
-
-      def list_jobs
-        get(Chronos::Client.chronos_service_url) do |json_body, response_location|
-          json_body
+      def create_job(callback_url, schedule)
+        response = client.post(@service_url, @standard_headers, {:callback_url => callback_url, :schedule => schedule}.to_json)
+        unless response.status == 201
+          raise "Unexpected response #{response.status}: #{response.body}"
         end
       end
 
-    end
+      def destroy_job(job_url)
+        response = client.delete(job_url)
+        unless response.status == 200
+          raise "Unexpected response #{response.status}: #{response.body}"
+        end
+      end
 
-    protected
+      def list_jobs
+        response = client.get(@service_url, @standard_headers)
+        if response.status == 200
+          JSON.parse(response.body)
+        else
+          raise "Unexpected response #{response.status}: #{response.body}"
+        end
+      end
 
-    def self.chronos_service_url
-      env_var("CHRONOS_SERVICE_URL")
-    end
+      attr_writer :backend
+      def backend
+        @backend ||= Rack::Client::Handler::NetHTTP
+      end
 
-    private
+      protected
 
-    def self.env_var(var)
-      ENV[var] || (raise "missing environment variable: #{var}")
+      def client
+        #need to set vars in scope here because Rack::Client.new instance_evals
+        bak = @backend
+        creds = @creds
+        @client ||= Rack::Client.new do
+          use BasicAuth, creds
+          run bak
+        end
+      end
+
+      private
+
+      class BasicAuth
+        def initialize(app, creds)
+          @app = app
+          @username, @password = creds
+        end
+
+        def call(env)
+          env["HTTP_AUTHORIZATION"] = 'Basic ' + ["#{@username}:#{@password}"].pack('m').delete("\r\n")
+          @app.call(env)
+        end
+      end
+
     end
 
   end

@@ -33,19 +33,45 @@ module Chronos
       ##################
 
       post "/chronosapi/1/jobs" do
-        #TODO: hmac the other way!
-        #1. lookup the scheduler by auth_id
-        #2. add a job to the scheduler based on the params given
-        {}.to_json
+        api_protected!
+        jobs.create!(JSON.parse(request.body.read))
+        status 201
       end
 
       get "/chronosapi/1/jobs" do
-        #TODO: hmac the other way!
-        #1. lookup the scheduler by auth_id
-        #2. list jobs for that scheduler
-        [].to_json
+        api_protected!
+        jobs.map{|j| {:callback_url => j.callback_url, :schedule => j.schedule} }.to_json
       end
 
+      #TODO: delete to an endpoint to remove some job you have
+
+      ###################
+      # Sinatra Helpers #
+      ###################
+      helpers do
+
+        def jobs
+          @scheduler.jobs
+        end
+
+        def api_protected!
+          unless api_authorized?
+            response['WWW-Authenticate'] = %(Basic realm="Restricted Area")
+            throw(:halt, [401, "Not authorized\n"])
+          end
+        end
+
+        def api_authorized?
+          @auth ||=  Rack::Auth::Basic::Request.new(request.env)
+          if @auth.provided? && @auth.basic? && @auth.credentials
+            username, password = @auth.credentials
+            if @scheduler = Scheduler.find_by_auth_username(username)
+              @scheduler.auth_password == password
+            end
+          end
+        end
+
+      end
     end
 
     ##################################

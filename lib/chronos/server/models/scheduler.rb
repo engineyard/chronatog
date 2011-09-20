@@ -5,10 +5,11 @@ module Chronos
         attr_accessor :scheduler
       end
       belongs_to :customer
+      has_many :jobs
 
       after_initialize do
-        self.client_auth_id ||= SecureRandom.hex(7)
-        self.client_auth_key ||= SecureRandom.hex(13)
+        self.auth_username ||= SecureRandom.hex(7)
+        self.auth_password ||= SecureRandom.hex(13)
       end
 
       def self.setup!
