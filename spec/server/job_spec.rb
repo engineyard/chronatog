@@ -6,25 +6,47 @@ describe "creating a job" do
     before do
       @customer = Chronos::Server::Customer.create!(:name => "some-customer")
       scheduler = @customer.schedulers.create!
-      Chronos::Client.setup!("http://chronos.local/chronosapi/1/jobs", scheduler.auth_username, scheduler.auth_password)
+      @client = Chronos::Client.setup!("http://chronos.local/chronosapi/1/jobs", scheduler.auth_username, scheduler.auth_password)
     end
 
     describe "client mocked to talk to in-mem rack server" do
       before do
-        Chronos::Client.connection.backend = Chronos::Server::Application
+        @client.backend = Chronos::Server::Application
       end
 
       describe "I create a job" do
         before do
-          Chronos::Client.connection.create_job("http://example.local/my/callback/url", "*/2 * * * *") #callback every 2 minutes
+          @job = @client.create_job("http://example.local/my/callback/url", "*/2 * * * *") #callback every 2 minutes
+        end
+
+        it "works" do
+          @job['callback_url'].should eq "http://example.local/my/callback/url"
+          @job['schedule'].should eq "*/2 * * * *"
         end
 
         it "should show in my job list" do
-          jobs = Chronos::Client.connection.list_jobs
+          jobs = @client.list_jobs
           jobs.size.should eq 1
           jobs.first['callback_url'].should eq "http://example.local/my/callback/url"
           jobs.first['schedule'].should eq "*/2 * * * *"
         end
+
+        it "should be GET-able" do
+          job = @client.get_job(@job["url"])
+          job.should eq @job
+        end
+
+        describe "I delete the job" do
+          before do
+            @client.destroy_job(@job["url"])
+          end
+
+          it "should be gone" do
+            jobs = @client.list_jobs
+            jobs.size.should eq 0
+          end
+        end
+
       end
 
     end

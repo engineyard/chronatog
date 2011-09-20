@@ -34,13 +34,24 @@ module Chronos
 
       post "/chronosapi/1/jobs" do
         api_protected!
-        jobs.create!(JSON.parse(request.body.read))
+        job = jobs.create!(JSON.parse(request.body.read))
         status 201
+        api_job(job).to_json
       end
 
       get "/chronosapi/1/jobs" do
         api_protected!
-        jobs.map{|j| {:callback_url => j.callback_url, :schedule => j.schedule} }.to_json
+        jobs.map{|j| api_job(j) }.to_json
+      end
+
+      get '/chronosapi/1/jobs/:job_id' do |job_id|
+        api_protected!
+        api_job(jobs.find(job_id)).to_json
+      end
+
+      delete '/chronosapi/1/jobs/:job_id' do |job_id|
+        api_protected!
+        jobs.find(job_id).destroy
       end
 
       #TODO: delete to an endpoint to remove some job you have
@@ -49,6 +60,10 @@ module Chronos
       # Sinatra Helpers #
       ###################
       helpers do
+
+        def api_job(job)
+          {:callback_url => job.callback_url, :schedule => job.schedule, :url => "#{base_url}/chronosapi/1/jobs/#{job.id}"}
+        end
 
         def jobs
           @scheduler.jobs
@@ -69,6 +84,11 @@ module Chronos
               @scheduler.auth_password == password
             end
           end
+        end
+
+        def base_url
+          uri = URI.parse(request.url)
+          uri.to_s.gsub(uri.request_uri, '')
         end
 
       end

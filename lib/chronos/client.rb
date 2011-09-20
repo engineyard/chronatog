@@ -1,10 +1,10 @@
-require 'ey_api_hmac'
+require 'rack/client'
 
 module Chronos
   module Client
 
     def self.setup!(service_url, auth_username, auth_password)
-      @connection ||= Connection.new(service_url, auth_username, auth_password)
+      @connection = Connection.new(service_url, auth_username, auth_password)
     end
 
     def self.connection
@@ -23,7 +23,9 @@ module Chronos
 
       def create_job(callback_url, schedule)
         response = client.post(@service_url, @standard_headers, {:callback_url => callback_url, :schedule => schedule}.to_json)
-        unless response.status == 201
+        if response.status == 201
+          JSON.parse(response.body)
+        else
           raise "Unexpected response #{response.status}: #{response.body}"
         end
       end
@@ -37,6 +39,15 @@ module Chronos
 
       def list_jobs
         response = client.get(@service_url, @standard_headers)
+        if response.status == 200
+          JSON.parse(response.body)
+        else
+          raise "Unexpected response #{response.status}: #{response.body}"
+        end
+      end
+
+      def get_job(job_url)
+        response = client.get(job_url, @standard_headers)
         if response.status == 200
           JSON.parse(response.body)
         else
