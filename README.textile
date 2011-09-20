@@ -1,0 +1,15 @@
+h1. Chronos
+
+Chronos is:
+
+# A simple service providing basic web cron. (lib/server)
+# A ruby client implementation for the chronos.engineyard.com web service. (lib/client, chronos-client.gemspec)
+# An example service demonstrating how to integrate with the EngineYard services API. (lib/ey_integration)
+# A gem for use by the internal EngineYard services API implementation, for testing. (chronos.gemspec)
+# This document designed for helping partners get started with the EY services API. (README.textile)
+
+h3. Getting Started: Deploying your own Chronos
+
+First you need a partner account with EngineYard.  If you do, you should be able to login at "http://services.engineyard.com":http://services.engineyard.com.
+
+!chronos.jpg!
