@@ -15,8 +15,8 @@ Gem::Specification.new do |s|
   s.require_paths = ["lib"]
 
   s.add_dependency 'activerecord', '3.0.9'
-  s.add_dependency 'ey_sso'
   s.add_dependency 'haml'
   s.add_dependency 'sinatra'
-  s.add_dependency 'sqlite3'
+  s.add_dependency 'ey_services_api'
+  s.add_dependency 'rufus-scheduler'
 end

@@ -1,6 +1,7 @@
 require File.join( File.dirname(__FILE__), "spec_helper" )
 
 describe "creating a job" do
+  include_context "chronos server reset"
 
   describe "I have credentials" do
     before do

@@ -1,8 +1,9 @@
 require 'chronos/server'
 require 'chronos/client'
 
-RSpec.configure do |config|
-  config.before(:each) do
+shared_context "chronos server reset" do
+  before(:each) do
     Chronos::Server.reset!
+    ActiveRecord::Base.descendants.each(&:reset_column_information)
   end
 end

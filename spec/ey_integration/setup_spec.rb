@@ -1,6 +1,7 @@
 require File.join( File.dirname(__FILE__), "spec_helper" )
 
 describe "credentials" do
+  include_context "ey integration reset"
 
   it "records service credentials" do
     pending

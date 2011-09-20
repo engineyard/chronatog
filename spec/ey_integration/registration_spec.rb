@@ -1,15 +1,13 @@
 require File.join( File.dirname(__FILE__), "spec_helper" )
 
 describe "setup" do
-  before do
-    @mock_backend = EY::ServicesAPI.mock_backend
-  end
+  include_context "ey integration reset"
 
   describe "with the service registered" do
     before do
-      # Chronos::Eyintegration.save_creds(@mock_backend.partner[:auth_id], @mock_backend.partner[:auth_key])
+      # Chronos::EyIntegration.save_creds(@mock_backend.partner[:auth_id], @mock_backend.partner[:auth_key])
       base_url = "http://chronos.local"
-      Chronos::Eyintegration.register_service(@mock_backend.partner[:registration_url], base_url)
+      Chronos::EyIntegration.register_service(@mock_backend.partner[:registration_url], base_url)
     end
 
     it "creates a service" do
