@@ -35,8 +35,8 @@ module Chronos
         :name => "Chronos",
         :description => "Web cron as a service.",
         :service_accounts_url =>     "#{base_url + PATHPREFIX}/api/1/customers",
-        :home_url =>                 "#{base_url + PATHPREFIX}/",
-        :terms_and_conditions_url => "#{base_url + PATHPREFIX}/terms",
+        :home_url =>                 "#{base_url}/",
+        :terms_and_conditions_url => "#{base_url}/terms",
         :vars => ["CHRONOS_AUTH_USERNAME", "CHRONOS_AUTH_PASSWORD", "CHRONOS_SERVICE_URL"]
       }
     end
