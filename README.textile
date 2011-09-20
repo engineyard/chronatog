@@ -8,8 +8,9 @@ Chronos is:
 # A gem for use by the internal EngineYard services API implementation, for testing. (chronos.gemspec)
 # This document designed for helping partners get started with the EY services API. (README.textile)
 
+!https://github.com/engineyard/chronos/raw/documentation/chronos.jpg!
+
 h3. Getting Started: Deploying your own Chronos
 
-First you need a partner account with EngineYard.  If you do, you should be able to login at "http://services.engineyard.com":http://services.engineyard.com.
+First you need a partner account with EngineYard.  Once you have one, you should be able to login at "http://services.engineyard.com":http://services.engineyard.com.
 
-!https://github.com/engineyard/chronos/raw/documentation/chronos.jpg!
