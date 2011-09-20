@@ -1,8 +1,8 @@
 PATH
   remote: .
   specs:
-    chronos (0.1.TODO)
-      activerecord (= 3.0.9)
+    chronos (0.0.0)
+      activerecord
       ey_services_api
       haml
       rufus-scheduler
