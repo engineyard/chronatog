@@ -12,4 +12,4 @@ h3. Getting Started: Deploying your own Chronos
 
 First you need a partner account with EngineYard.  If you do, you should be able to login at "http://services.engineyard.com":http://services.engineyard.com.
 
-!chronos.jpg!
+!https://github.com/engineyard/chronos/raw/documentation/chronos.jpg!
