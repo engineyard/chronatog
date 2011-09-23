@@ -27,7 +27,7 @@ GEM
     ey_api_hmac (0.0.13)
       json
       rack-client
-    ey_services_api (0.0.2)
+    ey_services_api (0.0.4)
       ey_api_hmac
       json
     guard (0.7.0)

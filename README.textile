@@ -50,7 +50,7 @@ Example:
 bc.. $ script/console
 > chronos_url = "http://chronos.example.com"
 > Chronos::EyIntegration.register_service("https://services.engineyard.com/api/1/partners/1/services", chronos_url)
-=> TODO: description of my service...
+=> #<Chronos::Server::Service id: 1, name: "Chronos", state: "registered", url: "services.engineyard.com/api/1/partners/1/services/12", created_at: "2011-09-23 14:16:17", updated_at: "2011-09-23 14:16:17">
 
 p. Behind the scene, Chronos is calling @register_service@ on a @EY::ServicesAPI::Connection@.  The first parameter is the @registration_url@. The second parameter is a hash describing the service being registered.
 
