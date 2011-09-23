@@ -1,6 +1,6 @@
 source 'http://rubygems.org'
 
-gemspec
+gemspec :name => "chronos"
 
 gem 'pg' #Database for production
 

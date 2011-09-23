@@ -10,7 +10,84 @@ Chronos is:
 
 !https://github.com/engineyard/chronos/raw/documentation/chronos.jpg!
 
-h3. Getting Started: Deploying your own Chronos
+h2. Getting Started: Deploying your own Chronos
 
-First you need a partner account with EngineYard.  Once you have one, you should be able to login at "http://services.engineyard.com":http://services.engineyard.com.
+h3. Become a Partner
+
+First you need a partner account with EngineYard.  Once you have one, you should be able to login at "https://services.engineyard.com":https://services.engineyard.com.
+
+h3. Save your credentials
+
+In Chronos, credentials are stored in config/ey_partner_credentials.yml.
+
+Example to generate this file in script/console:
+
+bc.. $ script/console
+> Chronos::EyIntegration.save_creds('ff4d04dbea52c605', 'e301bcb647fc4e9def6dfb416722c583cf3058bc1b516ebb2ac99bccf7ff5c5ea22c112cd75afd28')
+
+h3. Test your connection
+
+To test your connection to services.engineyard.com, you can make a GET request to the registration url.  This returns a listing of currently registered services.
+
+Example:
+
+bc.. $ script/console
+> Chronos::EyIntegration.connection.list_services("https://services.engineyard.com/api/1/partners/1/services")
+=> []
+
+p. Behind the scenes, Chronos is calling out to @EY::ServicesAPI@.
+
+@list_services@ is a method on @EY::ServicesAPI::Connection@.
+
+h3. Register your services
+
+For the remainder of the setup steps, you will need to have Chronos running somewhere with a publicly accessible url.
+
+To register your service, you make a POST request to the registration url, passing a JSON body describing your service.  Included in that description are callback URLS, so in order to generate them Chronos needs to know it's public-facing url.
+
+Example:
+
+bc.. $ script/console
+> chronos_url = "http://chronos.example.com"
+> Chronos::EyIntegration.register_service("https://services.engineyard.com/api/1/partners/1/services", chronos_url)
+=> TODO: description of my service...
+
+p. Behind the scene, Chronos is calling @register_service@ on a @EY::ServicesAPI::Connection@.  The first parameter is the @registration_url@. The second parameter is a hash describing the service being registered.
+
+In the case of this example it looks something like:
+
+bc.. {
+  :name => "Chronos",
+  :description => "Web cron as a service.",
+  :service_accounts_url =>     "http://chronos.example.com/eyintegration/api/1/customers",
+  :home_url =>                 "http://chronos.example.com/",
+  :terms_and_conditions_url => "http://chronos.example.com/terms",
+  :vars => ["CHRONOS_AUTH_USERNAME", "CHRONOS_AUTH_PASSWORD", "CHRONOS_SERVICE_URL"]
+}
+
+h3. Using your service
+
+If your service registration succeeded, you should see it's information displayed when you visit https://services.engineyard.com.  From there you can enable testing of your service with any cloud account you have access to.  If you don't have any cloud accounts, you can create a free trial account at:
+https://cloud.engineyard.com/.
+
+Once enabled for testing, you should see your service available if you navigate to "Services" in the menu bar from https://cloud.engineyard.com.
+
+TODO: enabling service makes a callback, Chronos sends a welcome message.
+
+TODO: clicking configure does SSO.
+
+TODO: disabling service makes a callback, and Chronos responds by sending a bill.
+
+TODO: provisioning service makes a callback, Chronos generates API keys.
+
+TODO: provisioned service SSO.
+
+TODO: using those API keys works. Chronos automatically updates the status to tell the user they are now using the service. Tell them how many jobs are scheduled.
+
+TODO: using the API to create more than 10 jobs on the free plan and Chronos sends a notification prompting you to upgrade.
+
+TODO: Examining the monthly billing job Chronos created in itself and forcing it to run.
+
+
+
 
