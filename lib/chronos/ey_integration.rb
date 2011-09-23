@@ -54,39 +54,45 @@ module Chronos
     # Credentials for talking to EY #
     #################################
 
-    #TODO: make a rake task for saving credentials (takes args)
-    # def self.setup!
-    #   if api_creds
-    #     EY::ServicesAPI.setup!(:auth_id => api_creds.auth_id, :auth_key => api_creds.auth_key)
-    #   end
-    # end
+    def self.setup!
+      if api_creds
+        EY::ServicesAPI.setup!(:auth_id => api_creds.auth_id, :auth_key => api_creds.auth_key)
+      end
+    end
 
     def self.connection
       EY::ServicesAPI.connection
     end
 
-    # def self.api_creds
-    #   @creds ||= Credentials.load
-    # end
-
-    def self.save_creds(auth_id, auth_key)
-      # Credentials.write!(:auth_id => auth_id, :auth_key => auth_key)
+    def self.api_creds
+      @creds ||= Credentials.load
     end
 
-    # class Credentials < Struct.new(:auth_id, :auth_key)
-    #   CONFIG_PATH = File.expand_path('../../../config/credentials.yml', __FILE__)
-    #   def self.load
-    #     if File.exists?(CONFIG_PATH)
-    #       creds = YAML.load_file(CONFIG_PATH)
-    #       Credentials.new(creds[:auth_id], creds[:auth_key])
-    #     end
-    #   end
-    #   def self.write!(creds)
-    #     File.open(CONFIG_PATH, "w") do |fp|
-    #       fp.write(creds.to_yaml)
-    #     end
-    #   end
-    # end
+    def self.save_creds(auth_id, auth_key)
+      Credentials.write!(:auth_id => auth_id, :auth_key => auth_key)
+    end
+
+    def self.destroy_creds
+      api_creds.destroy if api_creds
+    end
+
+    class Credentials < Struct.new(:auth_id, :auth_key)
+      CONFIG_PATH = File.expand_path('../../../config/ey_partner_credentials.yml', __FILE__)
+      def self.load
+        if File.exists?(CONFIG_PATH)
+          creds = YAML.load_file(CONFIG_PATH)
+          Credentials.new(creds[:auth_id], creds[:auth_key])
+        end
+      end
+      def self.write!(creds)
+        File.open(CONFIG_PATH, "w") do |fp|
+          fp.write(creds.to_yaml)
+        end
+      end
+      def destroy
+        FileUtils.rm_f(CONFIG_PATH)
+      end
+    end
 
     def self.setup!
       Chronos::Server.setup!
