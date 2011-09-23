@@ -24,6 +24,7 @@ Example to generate this file in script/console:
 
 bc.. $ script/console
 > Chronos::EyIntegration.save_creds('ff4d04dbea52c605', 'e301bcb647fc4e9def6dfb416722c583cf3058bc1b516ebb2ac99bccf7ff5c5ea22c112cd75afd28')
+=> #<struct Chronos::EyIntegration::Credentials auth_id="ff4d04dbea52c605", auth_key="e301bcb647fc4e9def6dfb416722c583cf3058bc1b516ebb2ac99bccf7ff5c5ea22c112cd75afd28">
 
 h3. Test your connection
 
@@ -32,7 +33,7 @@ To test your connection to services.engineyard.com, you can make a GET request t
 Example:
 
 bc.. $ script/console
-> Chronos::EyIntegration.connection.list_services("https://services.engineyard.com/api/1/partners/1/services")
+> Chronos::EyIntegration.connection.list_services(@mock_backend.partner[:registration_url])
 => []
 
 p. Behind the scenes, Chronos is calling out to @EY::ServicesAPI@.

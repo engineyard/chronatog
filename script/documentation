@@ -7,9 +7,11 @@ require 'erb'
 require 'RedCloth'
 
 class Parser
+
   def snippets
     @snippets ||= {}
   end
+
   def add(contents)
     parts = contents.split(/(#\{[a-z_]+\{)|(#\}[a-z_]+\}$)/)
     parts.pop
@@ -34,6 +36,7 @@ class Parser
       end
     end
   end
+
   def clean(str)
     whitespace = str.split("\n")[1].match(/^\s+/)[0]
     str.gsub(whitespace, "").strip
@@ -46,7 +49,7 @@ class Parser
     end
     def method_missing(method, *ignoredargs)
       key = method.to_s
-      raise "No #{key} found" unless @snippets.key?(key)
+      raise "No #{key} found, I have #{@snippets.keys.inspect}" unless @snippets.key?(key)
       @unused.delete(key)
       @snippets[key]
     end
@@ -56,12 +59,17 @@ class Parser
   end
 
   def snippy
-    Snippers.new(snippets)
+    @snippy ||= Snippers.new(snippets)
   end
 
 end
 
 parser = Parser.new
+
+puts "hold on, I need to run the tests first"
+
+require 'rspec'
+RSpec::Core::CommandLine.new(["spec"]).run(STDERR, STDOUT)
 
 erb_file_path = File.expand_path("../../README.textile.erb", __FILE__)
 textile_file_path = File.expand_path("../../README.textile", __FILE__)
@@ -70,8 +78,11 @@ html_file_path = File.expand_path("../../README.html", __FILE__)
 Dir[File.expand_path("../../**/**/**/*.rb", __FILE__)].each do |source|
   parser.add(File.read(source))
 end
+parser.snippets.merge!(DocHelper.snippets)
 
 textile = ERB.new(File.read(erb_file_path)).result(parser.snippy.send(:binding))
+
+parser.snippy.assert_all_used!
 
 File.open(textile_file_path, "w") {|fs| fs.write textile}
 
@@ -92,5 +103,7 @@ code {
   })
   fs.write RedCloth.new(textile).to_html
 end
+
+puts "OK, generated #{html_file_path}, now attempting to open"
 
 `open #{html_file_path}`

@@ -1,4 +1,5 @@
 require 'chronos/ey_integration'
+require File.join( File.dirname(__FILE__), "../doc_helper" )
 
 shared_context "ey integration reset" do
   before(:each) do

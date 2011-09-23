@@ -1,5 +1,6 @@
 require 'chronos/server'
 require 'chronos/client'
+require File.join( File.dirname(__FILE__), "../doc_helper" )
 
 shared_context "chronos server reset" do
   before(:each) do

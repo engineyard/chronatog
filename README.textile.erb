@@ -23,7 +23,8 @@ In Chronos, credentials are stored in config/ey_partner_credentials.yml.
 Example to generate this file in script/console:
 
 bc.. $ script/console
-> Chronos::EyIntegration.save_creds('ff4d04dbea52c605', 'e301bcb647fc4e9def6dfb416722c583cf3058bc1b516ebb2ac99bccf7ff5c5ea22c112cd75afd28')
+> <%= save_creds_call %>
+=> <%= save_creds_result %>
 
 h3. Test your connection
 
@@ -32,8 +33,8 @@ To test your connection to services.engineyard.com, you can make a GET request t
 Example:
 
 bc.. $ script/console
-> Chronos::EyIntegration.connection.list_services("https://services.engineyard.com/api/1/partners/1/services")
-=> []
+> <%= list_services_call %>
+=> <%= list_services_result %>
 
 p. Behind the scenes, Chronos is calling out to @EY::ServicesAPI@.
 

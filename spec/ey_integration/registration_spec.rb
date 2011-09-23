@@ -4,8 +4,12 @@ describe "setup" do
   include_context "ey integration reset"
 
   it "can fetch listing of services" do
-    result = Chronos::EyIntegration.connection.list_services(@mock_backend.partner[:registration_url])
-    result.should eq []
+    list_services_result =
+#{list_services_call{
+      Chronos::EyIntegration.connection.list_services(@mock_backend.partner[:registration_url])
+#}list_services_call}
+    DocHelper.save('list_services_result', list_services_result.inspect)
+    list_services_result.should eq []
   end
 
   describe "with the service registered" do

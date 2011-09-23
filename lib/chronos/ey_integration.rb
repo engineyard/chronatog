@@ -69,7 +69,7 @@ module Chronos
     end
 
     def self.save_creds(auth_id, auth_key)
-      Credentials.write!(:auth_id => auth_id, :auth_key => auth_key)
+      Credentials.write!(auth_id, auth_key)
     end
 
     def self.destroy_creds
@@ -84,10 +84,12 @@ module Chronos
           Credentials.new(creds[:auth_id], creds[:auth_key])
         end
       end
-      def self.write!(creds)
+      def self.write!(auth_id, auth_key)
+        creds = Credentials.new(auth_id, auth_key)
         File.open(CONFIG_PATH, "w") do |fp|
-          fp.write(creds.to_yaml)
+          fp.write({:auth_id => creds.auth_id, :auth_key => creds.auth_key}.to_yaml)
         end
+        creds
       end
       def destroy
         FileUtils.rm_f(CONFIG_PATH)
