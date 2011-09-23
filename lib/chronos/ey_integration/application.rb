@@ -9,24 +9,20 @@ module Chronos
       # EY Facing API #
       #################
 
-      post '/api/1/customers' do
-        #TODO: hmac!
+      #TODO: hmac middleware!
 
+      post '/api/1/customers' do
+#{customer_creation{
         #parse the request
         service_account = EY::ServicesAPI::ServiceAccountCreation.from_request(request.body.read)
-
-        service = Chronos::Server::Service.first || (raise "service not setup")
-        customer = service.customers.create!(
-        :name => service_account.name,
-        :api_url => service_account.url,
-        :messages_url => service_account.messages_url,
-        :invoices_url => service_account.invoices_url)
-
-        #sinatra stuff
-        content_type :json
-        headers 'Location' => customer.url(base_url)
-
-        #response with json about self
+        #create a new customer
+        customer = service.customers.create!( :name         => service_account.name,
+                                              :api_url      => service_account.url,
+                                              :messages_url => service_account.messages_url,
+                                              :invoices_url => service_account.invoices_url)
+#}customer_creation}
+#{customer_creation_response{
+        #create a response hash with information about the customer
         response_hash = service_account.creation_response_hash do |presenter|
           presenter.configuration_required = false
           presenter.configuration_url = customer.configuration_url(base_url)
@@ -34,8 +30,13 @@ module Chronos
           presenter.url = customer.url(base_url)
           presenter.message = EY::ServicesAPI::Message.new(:message_type => "status", :subject => customer.singup_message)
         end
-
+        #Set the Content-Type to JSON
+        content_type :json
+        #Set the Location header for extra REST (has the same value as response_hash["service_account"]["url"] )
+        headers 'Location' => customer.url(base_url)
+        #render the response_hash as json
         response_hash.to_json
+#}customer_creation_response}
       end
 
       delete "/api/1/customers/:customer_id" do |customer_id|
@@ -146,6 +147,10 @@ module Chronos
       def true_base_url
         uri = URI.parse(request.url)
         uri.to_s.gsub(uri.request_uri, '')
+      end
+
+      def service
+        Chronos::Server::Service.first || (raise "service not setup")
       end
 
     end

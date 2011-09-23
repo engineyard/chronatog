@@ -11,6 +11,7 @@ PATH
 GEM
   remote: http://rubygems.org/
   specs:
+    RedCloth (4.2.8)
     activemodel (3.0.9)
       activesupport (= 3.0.9)
       builder (~> 2.1.2)
@@ -64,6 +65,7 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
+  RedCloth
   chronos!
   guard-rspec
   pg

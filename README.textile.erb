@@ -83,13 +83,7 @@ bc.. POST "http://chronos.example.com/eyintegration/api/1/customers"
 
 p. Chronos will handle the callback with the implementation defined in @Chronos::EyIntegration::Application@ as:
 
-bc.. #parse the request
-service_account = EY::ServicesAPI::ServiceAccountCreation.from_request(request.body.read)
-#create a new customer
-customer = service.customers.create!( :name => service_account.name,
-      :api_url      => service_account.url,
-      :messages_url => service_account.messages_url,
-      :invoices_url => service_account.invoices_url)
+bc.. <%= customer_creation %>
 
 p. As part of handling the callback, a @Customer@ will be created, looking something like:
 
@@ -97,20 +91,7 @@ bc.. <Chronos::Server::Customer id: 1, TODO>
 
 p. Chronos returns a JSON response that tells EngineYard some information about the customer.
 
-bc.. #create a response hash with information about the customer
-response_hash = service_account.creation_response_hash do |presenter|
-  presenter.configuration_required = false
-  presenter.configuration_url = customer.configuration_url(base_url)
-  presenter.provisioned_services_url = customer.provisioned_services_url(base_url)
-  presenter.url = customer.url(base_url)
-  presenter.message = EY::ServicesAPI::Message.new(:message_type => "status", :subject => customer.singup_message)
-end
-#Set the Content-Type to JSON
-content_type :json
-#Set the Location header for extra REST (has the same value as response_hash["service_account"]["url"] )
-headers 'Location' => customer.url(base_url)
-#render the response_hash as json
-response_hash.to_json
+bc.. <%= customer_creation_response %>
 
 h3. More
 
