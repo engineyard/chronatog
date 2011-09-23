@@ -5,6 +5,7 @@ gemspec :name => "chronos"
 gem 'pg' #Database for production
 
 group :test, :development do
+  gem 'guard-rspec'
   gem 'rake'
   gem 'sqlite3' #Database for tests
   gem 'rspec'
