@@ -69,7 +69,9 @@ parser = Parser.new
 puts "hold on, I need to run the tests first"
 
 require 'rspec'
-RSpec::Core::CommandLine.new(["spec"]).run(STDERR, STDOUT)
+result = RSpec::Core::CommandLine.new(["spec"]).run(STDERR, STDOUT)
+
+raise "Fix the specs first" unless result == 0
 
 erb_file_path = File.expand_path("../../README.textile.erb", __FILE__)
 textile_file_path = File.expand_path("../../README.textile", __FILE__)
@@ -80,7 +82,12 @@ Dir[File.expand_path("../../**/**/**/*.rb", __FILE__)].each do |source|
 end
 parser.snippets.merge!(DocHelper.snippets)
 
-textile = ERB.new(File.read(erb_file_path)).result(parser.snippy.send(:binding))
+erbthing = ERB.new(File.read(erb_file_path))
+
+textile = parser.snippy.instance_eval do
+  erbthing.result(binding)
+end
+
 
 parser.snippy.assert_all_used!
 
