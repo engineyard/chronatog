@@ -5,6 +5,7 @@ Bundler.require
 
 require 'erb'
 require 'RedCloth'
+require 'colored'
 
 class Parser
 
@@ -49,12 +50,12 @@ class Parser
     end
     def method_missing(method, *ignoredargs)
       key = method.to_s
-      raise "No #{key} found, I have #{@snippets.keys.inspect}" unless @snippets.key?(key)
+      raise "No #{key} found, I have #{@snippets.keys.inspect}".white_on_red unless @snippets.key?(key)
       @unused.delete(key)
       @snippets[key]
     end
     def assert_all_used!
-      raise "You forget to use #{@unused.inspect}" unless @unused.empty?
+      raise "You forget to use #{@unused.inspect}".white_on_red unless @unused.empty?
     end
   end
 
@@ -71,7 +72,7 @@ puts "hold on, I need to run the tests first"
 require 'rspec'
 result = RSpec::Core::CommandLine.new(["spec"]).run(STDERR, STDOUT)
 
-raise "Fix the specs first" unless result == 0
+raise "Fix the specs first".white_on_red unless result == 0
 
 erb_file_path = File.expand_path("../../README.textile.erb", __FILE__)
 textile_file_path = File.expand_path("../../README.textile", __FILE__)
