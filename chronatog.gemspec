@@ -1,9 +1,9 @@
 Gem::Specification.new do |s|
-  s.name        = "chronos"
+  s.name        = "chronatog"
   s.version     = "0.0.0"
   s.authors     = ["Jacob Burkhart & Josh Lane & Others"]
   s.email       = ["jacob@engineyard.com"]
-  s.homepage    = "http://chronos.engineyard.com"
+  s.homepage    = "http://chronatog.engineyard.com"
   s.summary     = "Web cron as a service. Engine Yard's partner integration example."
   s.description = "Web cron as a service. Only has a gemspec so that other project can easily require for tests."
 

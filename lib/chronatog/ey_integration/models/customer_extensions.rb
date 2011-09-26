@@ -1,4 +1,4 @@
-module Chronos
+module Chronatog
   module EyIntegration
     module CustomerExtensions
 
@@ -21,7 +21,7 @@ module Chronos
       end
 
       def singup_message
-        "You enabled Chronos. Well done #{name}!"
+        "You enabled Chronatog. Well done #{name}!"
       end
 
       def create_scheduled_job(job)
@@ -52,7 +52,7 @@ module Chronos
           invoice = EY::ServicesAPI::Invoice.new(
           :total_amount_cents => total_price,
           :line_item_description => line_item_description)
-          Chronos.connection.send_invoice(invoices_url, invoice)
+          Chronatog.connection.send_invoice(invoices_url, invoice)
 
           self.last_billed_at = billing_at
           save!

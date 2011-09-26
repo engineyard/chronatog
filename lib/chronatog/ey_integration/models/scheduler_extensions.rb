@@ -1,4 +1,4 @@
-module Chronos
+module Chronatog
   module EyIntegration
     module SchedulerExtensions
 
@@ -45,7 +45,7 @@ module Chronos
       def generate_and_send_compliment(message_type)
         compliment = generate_compliment!
         message = EY::ServicesAPI::Message.new(:message_type => message_type, :subject => compliment)
-        Chronos.connection.send_message(self.messages_url, message)
+        Chronatog.connection.send_message(self.messages_url, message)
         compliment
       end
 

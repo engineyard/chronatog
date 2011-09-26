@@ -1,4 +1,4 @@
-module Chronos
+module Chronatog
   module Server
     class Service < Model
       has_many :customers

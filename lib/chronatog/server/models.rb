@@ -1,0 +1,5 @@
+require 'chronatog/server/models/model'
+require 'chronatog/server/models/schema'
+require 'chronatog/server/models/customer'
+require 'chronatog/server/models/scheduler'
+require 'chronatog/server/models/job'

@@ -7,7 +7,7 @@ if rails_env = ENV["RAILS_ENV"]
 end
 
 $:.unshift File.expand_path("../lib", __FILE__)
-require 'chronos/ey_integration'
+require 'chronatog/ey_integration'
 
-Chronos::EyIntegration.setup!
-run Chronos::EyIntegration.app
+Chronatog::EyIntegration.setup!
+run Chronatog::EyIntegration.app

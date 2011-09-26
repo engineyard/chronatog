@@ -1,6 +1,6 @@
 require 'rack/client'
 
-module Chronos
+module Chronatog
   module Client
 
     def self.setup!(service_url, auth_username, auth_password)

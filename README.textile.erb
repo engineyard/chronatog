@@ -1,16 +1,16 @@
-h1. Chronos
+h1. Chronatog
 
-Chronos is:
+Chronatog is:
 
 # A simple service providing basic web cron. (lib/server)
-# A ruby client implementation for the chronos.engineyard.com web service. (lib/client, chronos-client.gemspec)
+# A ruby client implementation for the chronatog.engineyard.com web service. (lib/client, chronatog-client.gemspec)
 # An example service demonstrating how to integrate with the EngineYard services API. (lib/ey_integration)
-# A gem for use by the internal EngineYard services API implementation, for testing. (chronos.gemspec)
+# A gem for use by the internal EngineYard services API implementation, for testing. (chronatog.gemspec)
 # This document designed for helping partners get started with the EY services API. (README.textile)
 
-!https://github.com/engineyard/chronos/raw/master/chronos.jpg!
+!https://github.com/engineyard/chronatog/raw/master/chronatog.jpg!
 
-h2. Getting Started: Deploying your own Chronos
+h2. Getting Started: Deploying your own Chronatog
 
 h3. Become a Partner
 
@@ -18,7 +18,7 @@ First you need a partner account with EngineYard.  Once you have one, you should
 
 h3. Save your credentials
 
-In Chronos, credentials are stored in config/ey_partner_credentials.yml.
+In Chronatog, credentials are stored in config/ey_partner_credentials.yml.
 
 Example to generate this file in script/console:
 
@@ -36,33 +36,33 @@ bc.. $ script/console
 > <%= list_services_call %>
 => <%= list_services_result %>
 
-p. Behind the scenes, Chronos is calling out to @EY::ServicesAPI@.
+p. Behind the scenes, Chronatog is calling out to @EY::ServicesAPI@.
 
 @list_services@ is a method on @EY::ServicesAPI::Connection@.
 
 h3. Register your services
 
-For the remainder of the setup steps, you will need to have Chronos running somewhere with a publicly accessible url.
+For the remainder of the setup steps, you will need to have Chronatog running somewhere with a publicly accessible url.
 
-To register your service, you make a POST request to the registration url, passing a JSON body describing your service.  Included in that description are callback URLS, so in order to generate them Chronos needs to know it's public-facing url.
+To register your service, you make a POST request to the registration url, passing a JSON body describing your service.  Included in that description are callback URLS, so in order to generate them Chronatog needs to know it's public-facing url.
 
 Example:
 
 bc.. $ script/console
-> chronos_url = "http://chronos.example.com"
-> Chronos::EyIntegration.register_service("https://services.engineyard.com/api/1/partners/1/services", chronos_url)
-=> #<Chronos::Server::Service id: 1, name: "Chronos", state: "registered", url: "services.engineyard.com/api/1/partners/1/services/12", created_at: "2011-09-23 14:16:17", updated_at: "2011-09-23 14:16:17">
+> chronatog_url = "http://chronatog.example.com"
+> Chronatog::EyIntegration.register_service("https://services.engineyard.com/api/1/partners/1/services", chronatog_url)
+=> #<Chronatog::Server::Service id: 1, name: "Chronatog", state: "registered", url: "services.engineyard.com/api/1/partners/1/services/12", created_at: "2011-09-23 14:16:17", updated_at: "2011-09-23 14:16:17">
 
-p. Behind the scene, Chronos is calling @register_service@ on a @EY::ServicesAPI::Connection@.  The first parameter is the @registration_url@. The second parameter is a hash describing the service being registered.
+p. Behind the scene, Chronatog is calling @register_service@ on a @EY::ServicesAPI::Connection@.  The first parameter is the @registration_url@. The second parameter is a hash describing the service being registered.
 
 In the case of this example it looks something like:
 
 bc.. {
-  :name => "Chronos",
+  :name => "Chronatog",
   :description => "Web cron as a service.",
-  :service_accounts_url =>     "http://chronos.example.com/eyintegration/api/1/customers",
-  :home_url =>                 "http://chronos.example.com/",
-  :terms_and_conditions_url => "http://chronos.example.com/terms",
+  :service_accounts_url =>     "http://chronatog.example.com/eyintegration/api/1/customers",
+  :home_url =>                 "http://chronatog.example.com/",
+  :terms_and_conditions_url => "http://chronatog.example.com/terms",
   :vars => ["CHRONOS_AUTH_USERNAME", "CHRONOS_AUTH_PASSWORD", "CHRONOS_SERVICE_URL"]
 }
 
@@ -75,40 +75,40 @@ Once enabled for testing, you should see your service available if you navigate 
 
 h3. Enabling your service
 
-When you click 'enable', EngineYard will make a call to your callback URL to create a service account.  In the case of Chronos, this callback is handled by creating a customer record.
+When you click 'enable', EngineYard will make a call to your callback URL to create a service account.  In the case of Chronatog, this callback is handled by creating a customer record.
 
 With a request that looks like:
 
-bc.. POST "http://chronos.example.com/eyintegration/api/1/customers"
+bc.. POST "http://chronatog.example.com/eyintegration/api/1/customers"
 { TODO }
 
-p. Chronos will handle the callback with the implementation defined in @Chronos::EyIntegration::Application@ as:
+p. Chronatog will handle the callback with the implementation defined in @Chronatog::EyIntegration::Application@ as:
 
 bc.. <%= customer_creation %>
 
 p. As part of handling the callback, a @Customer@ will be created, looking something like:
 
-bc.. <Chronos::Server::Customer id: 1, TODO>
+bc.. <Chronatog::Server::Customer id: 1, TODO>
 
-p. Chronos returns a JSON response that tells EngineYard some information about the customer.
+p. Chronatog returns a JSON response that tells EngineYard some information about the customer.
 
 bc.. <%= customer_creation_response %>
 
 h3. More
 
-TODO: enabling service makes a callback, Chronos sends a welcome message.
+TODO: enabling service makes a callback, Chronatog sends a welcome message.
 
 TODO: clicking configure does SSO.
 
-TODO: disabling service makes a callback, and Chronos responds by sending a bill.
+TODO: disabling service makes a callback, and Chronatog responds by sending a bill.
 
-TODO: provisioning service makes a callback, Chronos generates API keys.
+TODO: provisioning service makes a callback, Chronatog generates API keys.
 
 TODO: provisioned service SSO.
 
-TODO: using those API keys works. Chronos automatically updates the status to tell the user they are now using the service. Tell them how many jobs are scheduled.
+TODO: using those API keys works. Chronatog automatically updates the status to tell the user they are now using the service. Tell them how many jobs are scheduled.
 
-TODO: using the API to create more than 10 jobs on the free plan and Chronos sends a notification prompting you to upgrade.
+TODO: using the API to create more than 10 jobs on the free plan and Chronatog sends a notification prompting you to upgrade.
 
-TODO: Examining the monthly billing job Chronos created in itself and forcing it to run.
+TODO: Examining the monthly billing job Chronatog created in itself and forcing it to run.
 

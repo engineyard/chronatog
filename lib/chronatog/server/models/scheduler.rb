@@ -1,4 +1,4 @@
-module Chronos
+module Chronatog
   module Server
     class Scheduler < Model
       belongs_to :customer

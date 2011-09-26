@@ -1,18 +1,18 @@
 require File.join( File.dirname(__FILE__), "spec_helper" )
 
 describe "creating a job" do
-  include_context "chronos server reset"
+  include_context "chronatog server reset"
 
   describe "I have credentials" do
     before do
-      @customer = Chronos::Server::Customer.create!(:name => "some-customer")
+      @customer = Chronatog::Server::Customer.create!(:name => "some-customer")
       scheduler = @customer.schedulers.create!
-      @client = Chronos::Client.setup!("http://chronos.local/chronosapi/1/jobs", scheduler.auth_username, scheduler.auth_password)
+      @client = Chronatog::Client.setup!("http://chronatog.local/chronatogapi/1/jobs", scheduler.auth_username, scheduler.auth_password)
     end
 
     describe "client mocked to talk to in-mem rack server" do
       before do
-        @client.backend = Chronos::Server::Application
+        @client.backend = Chronatog::Server::Application
       end
 
       describe "I create a job" do

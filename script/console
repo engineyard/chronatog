@@ -3,8 +3,8 @@ require 'rubygems'
 require 'bundler'
 Bundler.require
 
-require 'chronos/ey_integration'
+require 'chronatog/ey_integration'
 require 'irb'
 
-Chronos::EyIntegration.setup!
+Chronatog::EyIntegration.setup!
 IRB.start

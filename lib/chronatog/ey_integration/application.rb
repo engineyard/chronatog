@@ -1,4 +1,4 @@
-module Chronos
+module Chronatog
   module EyIntegration
     class Application < Sinatra::Base
       enable :raise_errors
@@ -42,7 +42,7 @@ module Chronos
       delete "/api/1/customers/:customer_id" do |customer_id|
         #TODO: hmac!
 
-        @customer = Chronos::Server::Customer.find(customer_id)
+        @customer = Chronatog::Server::Customer.find(customer_id)
         @customer.cancel!
         @customer.destroy
         content_type :json
@@ -56,7 +56,7 @@ module Chronos
         provisioned_service = EY::ServicesAPI::ProvisionedServiceCreation.from_request(request.body.read)
 
         #do local persistence
-        customer = Chronos::Server::Customer.find(customer_id)
+        customer = Chronatog::Server::Customer.find(customer_id)
         scheduler = customer.schedulers.create!(
         :environment_name => provisioned_service.environment.name,
         :app_name => provisioned_service.app.name,
@@ -74,7 +74,7 @@ module Chronos
           presenter.vars = {
             "CHRONOS_AUTH_USERNAME"  => scheduler.auth_username,
             "CHRONOS_AUTH_PASSWORD" => scheduler.auth_password,
-            "CHRONOS_SERVICE_URL" => "#{true_base_url}/chronosapi/1/jobs",
+            "CHRONOS_SERVICE_URL" => "#{true_base_url}/chronatogapi/1/jobs",
           }
           presenter.url = scheduler.url(base_url)
           presenter.message = EY::ServicesAPI::Message.new(:message_type => "status", :subject => scheduler.created_message)
@@ -86,7 +86,7 @@ module Chronos
       delete "/api/1/customers/:customer_id/schedulers/:job_id" do |customer_id, job_id|
         #TODO: hmac!
 
-        customer = Chronos::Server::Customer.find(customer_id)
+        customer = Chronatog::Server::Customer.find(customer_id)
         scheduler = customer.schedulers.find(job_id)
         scheduler.decomission!
         content_type :json
@@ -98,8 +98,8 @@ module Chronos
       #############################
 
       get "/sso/customers/:customer_id" do |customer_id|
-        raise "Signature invalid" unless EY::ApiHMAC::SSO.authenticated?(request.url, Chronos.api_creds.auth_id, Chronos.api_creds.auth_key)
-        @customer = Chronos::Server::Customer.find(customer_id)
+        raise "Signature invalid" unless EY::ApiHMAC::SSO.authenticated?(request.url, Chronatog.api_creds.auth_id, Chronatog.api_creds.auth_key)
+        @customer = Chronatog::Server::Customer.find(customer_id)
         @redirect_to = params[:ey_return_to_url]
         haml :plans
       end
@@ -117,8 +117,8 @@ module Chronos
 
       get "/sso/customers/:customer_id/schedulers/:scheduler_id" do |customer_id, generator_id|
         #TODO: use a signature verification middleware instead?
-        raise "Signature invalid" unless EY::ApiHMAC::SSO.authenticated?(request.url, Chronos.api_creds.auth_id, Chronos.api_creds.auth_key)
-        @customer = Chronos::Server::Customer.find(customer_id)
+        raise "Signature invalid" unless EY::ApiHMAC::SSO.authenticated?(request.url, Chronatog.api_creds.auth_id, Chronatog.api_creds.auth_key)
+        @customer = Chronatog::Server::Customer.find(customer_id)
         @generator = @customer.compliment_generators.find(generator_id)
         @redirect_to = params[:ey_return_to_url]
         haml :generators
@@ -150,7 +150,7 @@ module Chronos
       end
 
       def service
-        Chronos::Server::Service.first || (raise "service not setup")
+        Chronatog::Server::Service.first || (raise "service not setup")
       end
 
     end

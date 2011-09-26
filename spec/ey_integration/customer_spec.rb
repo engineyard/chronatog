@@ -5,9 +5,9 @@ describe "customers" do
 
   context "with the service registered" do
     before do
-      # Chronos::EyIntegration.save_creds(@mock_backend.partner[:auth_id], @mock_backend.partner[:auth_key])
-      base_url = "http://chronos.local"
-      @service = Chronos::EyIntegration.register_service(@mock_backend.partner[:registration_url], base_url)
+      # Chronatog::EyIntegration.save_creds(@mock_backend.partner[:auth_id], @mock_backend.partner[:auth_key])
+      base_url = "http://chronatog.local"
+      @service = Chronatog::EyIntegration.register_service(@mock_backend.partner[:registration_url], base_url)
     end
 
     describe "when EY sends a service account creation request" do

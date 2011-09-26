@@ -1,10 +1,10 @@
-require 'chronos/server'
-require 'chronos/client'
+require 'chronatog/server'
+require 'chronatog/client'
 require File.join( File.dirname(__FILE__), "../doc_helper" )
 
-shared_context "chronos server reset" do
+shared_context "chronatog server reset" do
   before(:each) do
-    Chronos::Server.reset!
+    Chronatog::Server.reset!
     ActiveRecord::Base.descendants.each(&:reset_column_information)
   end
 end

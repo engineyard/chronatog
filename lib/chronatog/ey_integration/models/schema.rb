@@ -1,8 +1,8 @@
-module Chronos
+module Chronatog
   module EyIntegration
     class Schema
       def self.setup!
-        conn = Chronos::Server::Model.connection
+        conn = Chronatog::Server::Model.connection
         unless conn.table_exists?(:creds)
 
           conn.create_table "creds", :force => true do |t|

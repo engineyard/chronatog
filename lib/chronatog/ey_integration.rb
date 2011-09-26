@@ -1,20 +1,20 @@
-require 'chronos/server'
+require 'chronatog/server'
 require 'ey_api_hmac'
 require 'ey_services_api'
-require 'chronos/ey_integration/models'
-require 'chronos/ey_integration/application'
+require 'chronatog/ey_integration/models'
+require 'chronatog/ey_integration/application'
 
-module Chronos
+module Chronatog
   module EyIntegration
     PATHPREFIX = "/eyintegration"
 
     def self.app
       Rack::Builder.new do
         map "/" do
-          run Chronos::Server::Application
+          run Chronatog::Server::Application
         end
         map PATHPREFIX do
-          run Chronos::EyIntegration::Application
+          run Chronatog::EyIntegration::Application
         end
       end
     end
@@ -27,12 +27,12 @@ module Chronos
 
     def self.register_service(service_registration_url, base_url)
       #TODO: raise if we don't have any credentials
-      create_service("Chronos", service_registration_params(base_url), service_registration_url)
+      create_service("Chronatog", service_registration_params(base_url), service_registration_url)
     end
 
     def self.service_registration_params(base_url)
       {
-        :name => "Chronos",
+        :name => "Chronatog",
         :description => "Web cron as a service.",
         :service_accounts_url =>     "#{base_url + PATHPREFIX}/api/1/customers",
         :home_url =>                 "#{base_url}/",
@@ -42,7 +42,7 @@ module Chronos
     end
 
     def self.create_service(service_name, registration_params, service_registration_url)
-      service = Chronos::Server::Service.create!(:name => service_name, :state => 'unregistered')
+      service = Chronatog::Server::Service.create!(:name => service_name, :state => 'unregistered')
       remote_service = connection.register_service(service_registration_url, registration_params)
       service.url = remote_service.url
       service.state = "registered"
@@ -97,12 +97,12 @@ module Chronos
     end
 
     def self.setup!
-      Chronos::Server.setup!
+      Chronatog::Server.setup!
       Schema.setup!
     end
 
     def self.teardown!
-      Chronos::Server.teardown!
+      Chronatog::Server.teardown!
     end
 
     def self.reset!

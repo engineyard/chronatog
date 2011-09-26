@@ -2,10 +2,10 @@ require 'sinatra/base'
 require 'json'
 require 'yaml'
 require 'haml'
-require 'chronos/server/models'
-require 'chronos/server/application'
+require 'chronatog/server/models'
+require 'chronatog/server/application'
 
-module Chronos
+module Chronatog
   module Server
 
     def self.ensure_tmp_dir

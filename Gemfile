@@ -1,6 +1,6 @@
 source 'http://rubygems.org'
 
-gemspec :name => "chronos"
+gemspec :name => "chronatog"
 
 gem 'pg' #Database for production
 gem 'RedCloth' #for documentation generation
