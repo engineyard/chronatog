@@ -12,7 +12,11 @@ describe "customers" do
 
     describe "when EY sends a service account creation request" do
       before do
-        @mock_backend.create_service_account
+        creation_params = @mock_backend.service_account_creation_params
+        DocHelper.save('service_account_creation_params', creation_params)
+        creation_url = @mock_backend.service_account_creation_url
+        DocHelper.save('service_account_creation_url', creation_url)
+        @mock_backend.create_service_account(creation_url, creation_params)
       end
 
       it "creates a customer" do

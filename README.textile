@@ -52,7 +52,7 @@ bc.. $ script/console
 > registration_url = "http://services.engineyard.com/api/1/partners/1/services"
 > chronatog_url = "http://chronatog.example.com"
 > registered_service = Chronatog::EyIntegration.register_service(registration_url, chronatog_url)
-=> #<Chronatog::Server::Service id: 1, name: "Chronatog", state: "registered", url: "http://services.engineyard.com/api/1/partners/1/ser...", created_at: "2011-09-26 11:03:56", updated_at: "2011-09-26 11:03:56">
+=> #<Chronatog::Server::Service id: 1, name: "Chronatog", state: "registered", url: "http://services.engineyard.com/api/1/partners/1/ser...", created_at: "2011-09-26 14:59:30", updated_at: "2011-09-26 14:59:30">
 
 p. Behind the scene, Chronatog is calling @register_service@ on a @EY::ServicesAPI::Connection@.  The first parameter is the @registration_url@. The second parameter is a hash describing the service being registered.
 
@@ -80,8 +80,13 @@ When you click 'enable', EngineYard will make a call to your callback URL to cre
 
 With a request that looks like:
 
-bc.. POST "http://chronatog.example.com/eyintegration/api/1/customers"
-{ TODO }
+bc.. POST "http://chronatog.local/eyintegration/api/1/customers"
+{
+  :invoices_url => "http://services.engineyard.com/api/1/invoices/???service_account_id???", 
+  :messages_url => "http://services.engineyard.com/api/1/messages/???service_account_id???", 
+  :name         => "my-account", 
+  :url          => "TODO url"
+}
 
 p. Chronatog will handle the callback with the implementation defined in @Chronatog::EyIntegration::Application@ as:
 

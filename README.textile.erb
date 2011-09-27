@@ -73,8 +73,8 @@ When you click 'enable', EngineYard will make a call to your callback URL to cre
 
 With a request that looks like:
 
-bc.. POST "http://chronatog.example.com/eyintegration/api/1/customers"
-{ TODO }
+bc.. POST <%= service_account_creation_url %>
+<%= service_account_creation_params %>
 
 p. Chronatog will handle the callback with the implementation defined in @Chronatog::EyIntegration::Application@ as:
 
