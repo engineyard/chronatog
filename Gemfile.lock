@@ -9,11 +9,22 @@ PATH
       sinatra
 
 PATH
+  remote: ../cubbyhole
+  specs:
+    cubbyhole (0.1.1)
+
+PATH
   remote: ../ey_services_api
   specs:
     ey_services_api (0.0.5)
       ey_api_hmac
       json
+
+PATH
+  remote: ../ey_services_fake
+  specs:
+    ey_services_fake (0.0.1)
+      sinatra
 
 GEM
   remote: http://rubygems.org/
@@ -73,7 +84,9 @@ DEPENDENCIES
   RedCloth
   chronatog!
   colored
+  cubbyhole!
   ey_services_api!
+  ey_services_fake!
   guard-rspec
   pg
   rake

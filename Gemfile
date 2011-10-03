@@ -2,6 +2,10 @@ source 'http://rubygems.org'
 
 #REMOVE ME BEFORE COMMITTING
 gem 'ey_services_api', :path => "../ey_services_api"
+gem 'cubbyhole', :path => "../cubbyhole"
+
+#FIXME
+gem 'ey_services_fake', :path => "../ey_services_fake"
 
 gemspec :name => "chronatog"
 
