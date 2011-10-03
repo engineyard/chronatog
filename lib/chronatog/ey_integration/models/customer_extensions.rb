@@ -8,18 +8,6 @@ module Chronatog
         end
       end
 
-      # def url(base_url)
-      #   "#{base_url}/api/1/customers/#{id}"
-      # end
-      # 
-      # def provisioned_services_url(base_url)
-      #   "#{url(base_url)}/schedulers"
-      # end
-      # 
-      # def configuration_url(base_url)
-      #   "#{base_url}/sso/customers/#{id}"
-      # end
-
       def create_scheduled_job(job)
         Scheduler.add(self, env_name, job)
       end
@@ -60,11 +48,6 @@ module Chronatog
           nil
         end
       end
-
-      # def cancel!
-      #   bill!
-      #   schedulers.destroy_all
-      # end
 
     end
   end

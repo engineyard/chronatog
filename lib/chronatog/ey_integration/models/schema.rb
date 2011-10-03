@@ -3,9 +3,9 @@ module Chronatog
     class Schema
       def self.setup!
         conn = Chronatog::Server::Model.connection
-        unless conn.table_exists?(:ey_integration_schema)
+        unless conn.table_exists?(:schema_v2)
 
-          conn.create_table "ey_integration_schema", :force => true do |t|
+          conn.create_table "schema_v2", :force => true do |t|
           end
 
           conn.add_column "customers", "api_url",        :string

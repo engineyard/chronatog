@@ -43,8 +43,6 @@ module Chronatog
         jobs.find(job_id).destroy
       end
 
-      #TODO: delete to an endpoint to remove some job you have
-
       ###################
       # Sinatra Helpers #
       ###################

@@ -43,9 +43,9 @@ module Chronatog
       Service.write!(remote_service.url)
     end
 
-    #################################
-    # Credentials for talking to EY #
-    #################################
+    #############################
+    # DB setup/teardown helpers #
+    #############################
 
     def self.setup!
       Chronatog::Server.setup!
@@ -63,12 +63,20 @@ module Chronatog
       setup!
     end
 
+    ################################
+    # Connection for talking to EY #
+    ################################
+
     def self.connection
       unless EY::ServicesAPI.setup?
         EY::ServicesAPI.setup!(:auth_id => api_creds.auth_id, :auth_key => api_creds.auth_key)
       end
       EY::ServicesAPI.connection
     end
+
+    #################################
+    # Credentials for talking to EY #
+    #################################
 
     def self.api_creds
       @creds ||= Credentials.load
@@ -102,6 +110,10 @@ module Chronatog
         FileUtils.rm_f(CONFIG_PATH)
       end
     end
+
+    #################################
+    # Service as registered with EY #
+    #################################
 
     def self.service
       @service ||= Service.load
