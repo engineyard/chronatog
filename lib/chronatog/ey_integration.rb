@@ -2,22 +2,24 @@ require 'chronatog/server'
 require 'ey_api_hmac'
 require 'ey_services_api'
 require 'chronatog/ey_integration/models'
-require 'chronatog/ey_integration/application'
+require 'chronatog/ey_integration/controllers/api'
+require 'chronatog/ey_integration/controllers/sso'
 
 module Chronatog
   module EyIntegration
-    PATHPREFIX = "/eyintegration"
+    API_PATH_PREFIX = "/eyintegration/api/1"
+    SSO_PATH_PREFIX = "/eyintegration/sso"
 
     def self.app
       Rack::Builder.new do
         map "/" do
           run Chronatog::Server::Application
         end
-        map PATHPREFIX do
-          use EY::ApiHMAC::ApiAuth::LookupServer do |env, auth_id|
-            EyIntegration.api_creds && (EyIntegration.api_creds.auth_id == auth_id) && EyIntegration.api_creds.auth_key
-          end
-          run Chronatog::EyIntegration::Application
+        map API_PATH_PREFIX do
+          run Chronatog::EyIntegration::Controller::API
+        end
+        map SSO_PATH_PREFIX do
+          run Chronatog::EyIntegration::Controller::SSO
         end
       end
     end
@@ -34,7 +36,7 @@ module Chronatog
       {
         :name => "Chronatog",
         :description => "Web cron as a service.",
-        :service_accounts_url =>     "#{base_url + PATHPREFIX}/api/1/customers",
+        :service_accounts_url =>     "#{base_url + API_PATH_PREFIX}/customers",
         :home_url =>                 "#{base_url}/",
         :terms_and_conditions_url => "#{base_url}/terms",
         :vars => ["CHRONOS_AUTH_USERNAME", "CHRONOS_AUTH_PASSWORD", "CHRONOS_SERVICE_URL"]

@@ -59,11 +59,11 @@ p. Behind the scene, Chronatog is calling @register_service@ on a @EY::ServicesA
 In the case of this example it looks something like:
 
 bc.. {
+  :home_url                 => "http://chronatog.example.com/", 
   :service_accounts_url     => "http://chronatog.example.com/eyintegration/api/1/customers", 
   :terms_and_conditions_url => "http://chronatog.example.com/terms", 
   :vars                     => ["CHRONOS_AUTH_USERNAME", "CHRONOS_AUTH_PASSWORD", "CHRONOS_SERVICE_URL"], 
   :name                     => "Chronatog", 
-  :home_url                 => "http://chronatog.example.com/", 
   :description              => "Web cron as a service."
 } 
 
@@ -100,7 +100,7 @@ customer = Chronatog::Server::Customer.create!(create_params)
 
 p. As part of handling the callback, a @Customer@ will be created, looking something like:
 
-bc.. #<Chronatog::Server::Customer id: 1, service_id: nil, name: "some-account", created_at: "2011-10-03 17:17:08", updated_at: "2011-10-03 17:17:08", api_url: "http://services.engineyard.com/api/1/partners/0/ser...", messages_url: "http://services.engineyard.com/api/1/partners/0/ser...", invoices_url: "http://services.engineyard.com/api/1/partners/0/ser...", plan_type: nil, last_billed_at: nil>
+bc.. #<Chronatog::Server::Customer id: 1, service_id: nil, name: "some-account", created_at: "2011-10-04 10:37:44", updated_at: "2011-10-04 10:37:44", api_url: "http://services.engineyard.com/api/1/partners/0/ser...", messages_url: "http://services.engineyard.com/api/1/partners/0/ser...", invoices_url: "http://services.engineyard.com/api/1/partners/0/ser...", plan_type: nil, last_billed_at: nil>
 
 p. Chronatog returns a JSON response that tells EngineYard some information about the customer.
 
@@ -118,6 +118,10 @@ headers 'Location' => response.url
 response.to_hash.to_json
 
 p. Notice @EY::ServicesAPI::Message@ in the code above.  The subject text should now appear in the context of the Chronatog service on @https://cloud.engineyard.com@.
+
+h3. Verifying requests from Engine Yard
+
+
 
 h3. Visiting Chronatog over SSO
 
