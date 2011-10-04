@@ -91,7 +91,9 @@ p. Notice @EY::ServicesAPI::Message@ in the code above.  The subject text should
 
 h3. Verifying requests from Engine Yard
 
+By using the @EY::ApiHMAC::ApiAuth::LookupServer@ middleware in the API controller, Chronatog verifies that each request to it's API is correctly signed by the requester.  The block passed to the middleware is expected to return the @auth_key@ correspondent to the @auth_id@ given.  It is then up to @EY::ApiHMAC@ to calculate a signature and verify that it matches the one in the request (@env@).
 
+bc.. <%= hmac_middleware %>
 
 h3. Visiting Chronatog over SSO
 

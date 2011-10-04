@@ -100,15 +100,15 @@ customer = Chronatog::Server::Customer.create!(create_params)
 
 p. As part of handling the callback, a @Customer@ will be created, looking something like:
 
-bc.. #<Chronatog::Server::Customer id: 1, service_id: nil, name: "some-account", created_at: "2011-10-04 10:37:44", updated_at: "2011-10-04 10:37:44", api_url: "http://services.engineyard.com/api/1/partners/0/ser...", messages_url: "http://services.engineyard.com/api/1/partners/0/ser...", invoices_url: "http://services.engineyard.com/api/1/partners/0/ser...", plan_type: nil, last_billed_at: nil>
+bc.. #<Chronatog::Server::Customer id: 1, service_id: nil, name: "some-account", created_at: "2011-10-04 11:12:42", updated_at: "2011-10-04 11:12:42", api_url: "http://services.engineyard.com/api/1/partners/0/ser...", messages_url: "http://services.engineyard.com/api/1/partners/0/ser...", invoices_url: "http://services.engineyard.com/api/1/partners/0/ser...", plan_type: nil, last_billed_at: nil>
 
 p. Chronatog returns a JSON response that tells EngineYard some information about the customer.
 
 bc.. response_params = {
   :configuration_required   => false,
-  :configuration_url        => "#{base_url}/sso/customers/#{customer.id}",
-  :provisioned_services_url => "#{base_url}/api/1/customers/#{customer.id}/schedulers",
-  :url                      => "#{base_url}/api/1/customers/#{customer.id}",
+  :configuration_url        => "#{sso_base_url}/customers/#{customer.id}",
+  :provisioned_services_url => "#{api_base_url}/customers/#{customer.id}/schedulers",
+  :url                      => "#{api_base_url}/customers/#{customer.id}",
   :message                  => EY::ServicesAPI::Message.new(:message_type => "status", 
                                                             :subject      => "Thanks for signing up for Chronatog!")
 }
@@ -121,7 +121,11 @@ p. Notice @EY::ServicesAPI::Message@ in the code above.  The subject text should
 
 h3. Verifying requests from Engine Yard
 
+By using the @EY::ApiHMAC::ApiAuth::LookupServer@ middleware in the API controller, Chronatog verifies that each request to it's API is correctly signed by the requester.  The block passed to the middleware is expected to return the @auth_key@ correspondent to the @auth_id@ given.  It is then up to @EY::ApiHMAC@ to calculate a signature and verify that it matches the one in the request (@env@).
 
+bc.. use EY::ApiHMAC::ApiAuth::LookupServer do |env, auth_id|
+  EyIntegration.api_creds && (EyIntegration.api_creds.auth_id == auth_id) && EyIntegration.api_creds.auth_key
+end
 
 h3. Visiting Chronatog over SSO
 

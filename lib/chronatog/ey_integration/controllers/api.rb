@@ -5,10 +5,11 @@ module Chronatog
     module Controller
       class API < Base
 
-        #authenticate API requests
+#{hmac_middleware{
         use EY::ApiHMAC::ApiAuth::LookupServer do |env, auth_id|
           EyIntegration.api_creds && (EyIntegration.api_creds.auth_id == auth_id) && EyIntegration.api_creds.auth_key
         end
+#}hmac_middleware}
 
         #################
         # EY Facing API #
@@ -16,7 +17,7 @@ module Chronatog
 
         post '/customers' do
           json_body = request.body.read
-  #{customer_creation{
+#{customer_creation{
           service_account = EY::ServicesAPI::ServiceAccountCreation.from_request(json_body)
           create_params = {
             :name         => service_account.name,
@@ -25,8 +26,8 @@ module Chronatog
             :invoices_url => service_account.invoices_url
           }
           customer = Chronatog::Server::Customer.create!(create_params)
-  #}customer_creation}
-  #{customer_creation_response{
+#}customer_creation}
+#{customer_creation_response{
           response_params = {
             :configuration_required   => false,
             :configuration_url        => "#{sso_base_url}/customers/#{customer.id}",
@@ -39,7 +40,7 @@ module Chronatog
           content_type :json
           headers 'Location' => response.url
           response.to_hash.to_json
-  #}customer_creation_response}
+#}customer_creation_response}
         end
 
         delete "/customers/:customer_id" do |customer_id|
@@ -80,8 +81,6 @@ module Chronatog
         end
 
         delete "/customers/:customer_id/schedulers/:job_id" do |customer_id, job_id|
-          #TODO: hmac!
-
           customer = Chronatog::Server::Customer.find(customer_id)
           scheduler = customer.schedulers.find(job_id)
           scheduler.decomission!
