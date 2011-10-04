@@ -30,7 +30,7 @@ module Chronatog
           :provisioned_services_url => "#{base_url}/api/1/customers/#{customer.id}/schedulers",
           :url                      => "#{base_url}/api/1/customers/#{customer.id}",
           :message                  => EY::ServicesAPI::Message.new(:message_type => "status", 
-                                                                    :subject      => "Thanks for signing up to Chronatog!")
+                                                                    :subject      => "Thanks for signing up for Chronatog!")
         }
         response = EY::ServicesAPI::ServiceAccountResponse.new(response_params)
         content_type :json

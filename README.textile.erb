@@ -62,10 +62,9 @@ bc.. <%= service_registration_params %>
 
 h3. Viewing your service on cloud.engineyard.com
 
-If your service registration succeeded, you should see it's information displayed when you visit https://services.engineyard.com.  From there you can enable testing of your service with any cloud account you have access to.  If you don't have any cloud accounts, you can create a free trial account at:
-https://cloud.engineyard.com/.
+If your service registration succeeded, you should see it's information displayed when you visit @https://services.engineyard.com@.  From there you can enable testing of your service with any cloud account you have access to.  If you don't have any cloud accounts, you can create a free trial account at: @https://cloud.engineyard.com/@.
 
-Once enabled for testing, you should see your service available if you navigate to "Services" in the menu bar from https://cloud.engineyard.com.
+Once enabled for testing, you should see your service available if you navigate to "Services" in the menu bar from @https://cloud.engineyard.com@.
 
 h3. Enabling your service
 
@@ -88,11 +87,29 @@ p. Chronatog returns a JSON response that tells EngineYard some information abou
 
 bc.. <%= customer_creation_response %>
 
+p. Notice @EY::ServicesAPI::Message@ in the code above.  The subject text should now appear in the context of the Chronatog service on @https://cloud.engineyard.com@.
+
+h3. Verifying requests from Engine Yard
+
+
+
+h3. Visiting Chronatog over SSO
+
+With the service enabled, a "Visit" link should appear.  Following this link will redirect to the @configuration_url@ provided in the response to service enablement.
+
+The configuration url provided by Chronatog in this example was:
+
+bc.. <%= @service_configuration_url %>
+
+p. When EY signs the url it provides additional parameters, such that it looks like this:
+
+bc.. <%= @service_configuration_url_signed %>
+
+p. Chronatog will parse this information with code that looks like this:
+
+bc.. <%= @parse_sso_redirect %>
+
 h3. More
-
-TODO: enabling service makes a callback, Chronatog sends a welcome message.
-
-TODO: clicking configure does SSO.
 
 TODO: disabling service makes a callback, and Chronatog responds by sending a bill.
 

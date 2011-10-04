@@ -14,6 +14,9 @@ module Chronatog
           run Chronatog::Server::Application
         end
         map PATHPREFIX do
+          use EY::ApiHMAC::ApiAuth::LookupServer do |env, auth_id|
+            EyIntegration.api_creds && (EyIntegration.api_creds.auth_id == auth_id) && EyIntegration.api_creds.auth_key
+          end
           run Chronatog::EyIntegration::Application
         end
       end
@@ -132,7 +135,7 @@ module Chronatog
         end
       end
       def self.write!(url)
-        service = Service.new(:url => url)
+        service = Service.new(url)
         File.open(CONFIG_PATH, "w") do |fp|
           fp.write({:url => service.url})
         end

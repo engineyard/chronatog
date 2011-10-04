@@ -6,6 +6,7 @@ gem 'cubbyhole', :path => "../cubbyhole"
 
 #FIXME
 gem 'ey_services_fake', :path => "../ey_services_fake"
+gem 'ey_api_hmac', :path => "../ey_api_hmac"
 
 gemspec :name => "chronatog"
 
