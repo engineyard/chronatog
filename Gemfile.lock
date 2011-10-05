@@ -16,7 +16,7 @@ PATH
 PATH
   remote: ../ey_api_hmac
   specs:
-    ey_api_hmac (0.0.14.pre)
+    ey_api_hmac (0.0.15)
       json
       rack-client
 
