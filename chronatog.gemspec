@@ -14,5 +14,5 @@ Gem::Specification.new do |s|
   s.add_dependency 'haml'
   s.add_dependency 'sinatra'
   s.add_dependency 'ey_services_api'
-  s.add_dependency 'rufus-scheduler'
+  s.add_dependency 'ey_api_hmac'
 end
