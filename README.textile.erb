@@ -12,7 +12,7 @@ Chronatog is:
 # A gem for use by the internal EngineYard services API implementation, for testing. (chronatog.gemspec)
 # This document designed for helping partners get started with the EY services API. (README.textile)
 
-!https://github.com/engineyard/chronatog/raw/master/chronatog.jpg!
+!https://github.com/engineyard/chronatog/raw/master/images/chronatog.jpg!
 
 h2. Getting Started: Deploying your own Chronatog
 
@@ -66,9 +66,15 @@ bc.. <%= service_registration_params %>
 
 h3. Viewing your service on cloud.engineyard.com
 
-If your service registration succeeded, you should see it's information displayed when you visit @https://services.engineyard.com@.  From there you can enable testing of your service with any cloud account you have access to.  If you don't have any cloud accounts, you can create a free trial account at: @https://cloud.engineyard.com/@.
+If your service registration succeeded, you should see it's information displayed when you visit @https://services.engineyard.com@.  From there you can enable testing of your service with any cloud account you have access to.  
+
+!https://github.com/engineyard/chronatog/raw/master/images/enable_for_testing.png!
+
+If you don't have any cloud accounts, you can create a free trial account at: @https://cloud.engineyard.com/@.
 
 Once enabled for testing, you should see your service available if you navigate to "Services" in the menu bar from @https://cloud.engineyard.com@.
+
+!https://github.com/engineyard/chronatog/raw/master/images/enable_on_account.png!
 
 h3. Verifying requests from Engine Yard
 
@@ -118,6 +124,8 @@ bc.. <%= sso_before_filter %>
 h3. Provisioning a Chronatog Scheduler
 
 With the service enabled in EngineYard cloud, it should appear available for provisioning when you drill-down in the UI to viewing a single environment within the context of a single application.
+
+!https://github.com/engineyard/chronatog/raw/master/images/provision.png!
 
 Clicking "Provision" will cause EngineYard to call to your @provisioned_services_url@ to create a provisioned service.  In the case of Chronatog, this callback is handled by creating a scheduler.
 

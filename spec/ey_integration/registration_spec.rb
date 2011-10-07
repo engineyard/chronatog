@@ -4,9 +4,10 @@ describe "setup" do
   include_context "ey integration reset"
 
   it "can fetch listing of services" do
+    registration_url = @mock_backend.partner[:registration_url]
     list_services_result =
 #{list_services_call{
-      Chronatog::EyIntegration.connection.list_services(@mock_backend.partner[:registration_url])
+      Chronatog::EyIntegration.connection.list_services(registration_url)
 #}list_services_call}
     DocHelper.save('list_services_result', list_services_result)
     list_services_result.should eq []
