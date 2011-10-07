@@ -10,10 +10,11 @@ group :test, :development do
   gem 'colored'
 
   #for tests
+  gem 'ey_services_fake'
   gem 'guard-rspec'
   gem 'sqlite3' #Database for tests
   gem 'rspec'
-  gem 'ey_services_fake'
+  gem 'capybara'
 
   gem 'rake'
 end

@@ -70,6 +70,12 @@ If your service registration succeeded, you should see it's information displaye
 
 Once enabled for testing, you should see your service available if you navigate to "Services" in the menu bar from @https://cloud.engineyard.com@.
 
+h3. Verifying requests from Engine Yard
+
+By using the @EY::ApiHMAC::ApiAuth::LookupServer@ middleware in the API controller, Chronatog verifies that each request to it's API is correctly signed by the requester.  The block passed to the middleware is expected to return the @auth_key@ correspondent to the @auth_id@ given.  It is then up to @EY::ApiHMAC@ to calculate a signature and verify that it matches the one in the request (@env@).
+
+bc.. <%= hmac_middleware %>
+
 h3. Enabling your service
 
 When you click 'enable', EngineYard will make a call to your @service_accounts_url@ to create a service account.  In the case of Chronatog, this callback is handled by creating a customer record.
@@ -93,11 +99,21 @@ bc.. <%= customer_creation_response %>
 
 p. Notice @EY::ServicesAPI::Message@ in the code above.  The subject text should now appear in the context of the Chronatog service on @https://cloud.engineyard.com@.
 
-h3. Verifying requests from Engine Yard
+h3. Visiting Chronatog over SSO
 
-By using the @EY::ApiHMAC::ApiAuth::LookupServer@ middleware in the API controller, Chronatog verifies that each request to it's API is correctly signed by the requester.  The block passed to the middleware is expected to return the @auth_key@ correspondent to the @auth_id@ given.  It is then up to @EY::ApiHMAC@ to calculate a signature and verify that it matches the one in the request (@env@).
+With the service enabled, a "Visit" link should appear.  Following this link will redirect to the @configuration_url@ provided in the response to service enablement.
 
-bc.. <%= hmac_middleware %>
+The configuration url provided by Chronatog in this example was:
+
+bc.. <%= service_configuration_url %>
+
+p. When EY signs the url it provides additional parameters, such that it looks like this:
+
+bc.. <%= service_configuration_url_signed %>
+
+p. Chronatog will parse this information with code that looks like this:
+
+bc.. <%= parse_sso_redirect %>
 
 h3. Provisioning a Chronatog Scheduler
 
@@ -124,24 +140,6 @@ bc.. <%= service_provisioning_response %>
 
 p. Notice @EY::ServicesAPI::Message@ in the code above.  The subject text should now appear in the context of the relevant application and environment on @https://cloud.engineyard.com@.
 
-
-h2. TODO
-
-h3. Visiting Chronatog over SSO
-
-With the service enabled, a "Visit" link should appear.  Following this link will redirect to the @configuration_url@ provided in the response to service enablement.
-
-The configuration url provided by Chronatog in this example was:
-
-bc.. <%= @service_configuration_url %>
-
-p. When EY signs the url it provides additional parameters, such that it looks like this:
-
-bc.. <%= @service_configuration_url_signed %>
-
-p. Chronatog will parse this information with code that looks like this:
-
-bc.. <%= @parse_sso_redirect %>
 
 h3. More
 

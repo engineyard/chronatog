@@ -27,8 +27,17 @@ end
 
 shared_context "ey integration reset" do
   before(:each) do
-    @test_helper = EyIntegrationTestHelper.new
     EY::ServicesAPI.enable_mock!(@test_helper)
     @mock_backend = EY::ServicesAPI.mock_backend
+  end
+end
+
+require 'capybara/rspec'
+RSpec.configure do |config|
+  config.include(Capybara::RSpecMatchers)
+  config.include(Capybara::DSL)
+  config.before(:each) do
+    @test_helper = EyIntegrationTestHelper.new
+    Capybara.app = @test_helper.app
   end
 end

@@ -10,21 +10,23 @@ module Chronatog
         #############################
 
         get "/customers/:customer_id" do |customer_id|
-          raise "Signature invalid" unless EY::ApiHMAC::SSO.authenticated?(request.url, Chronatog.api_creds.auth_id, Chronatog.api_creds.auth_key)
+          raise "Signature invalid" unless EY::ApiHMAC::SSO.authenticated?(request.url, 
+                                                                           Chronatog::EyIntegration.api_creds.auth_id, 
+                                                                           Chronatog::EyIntegration.api_creds.auth_key)
           @customer = Chronatog::Server::Customer.find(customer_id)
           @redirect_to = params[:ey_return_to_url]
-          haml :plans
+          "TODO: you have SSO'd in to customer #{@customer.inspect}"
         end
 
-        get "/customers/:customer_id/schedulers/:scheduler_id" do |customer_id, generator_id|
-          #TODO: use a signature verification middleware instead?
-          raise "Signature invalid" unless EY::ApiHMAC::SSO.authenticated?(request.url, Chronatog.api_creds.auth_id, Chronatog.api_creds.auth_key)
+        get "/customers/:customer_id/schedulers/:scheduler_id" do |customer_id, scheduler_id|
+          raise "Signature invalid" unless EY::ApiHMAC::SSO.authenticated?(request.url, 
+                                                                           Chronatog::EyIntegration.api_creds.auth_id, 
+                                                                           Chronatog::EyIntegration.api_creds.auth_key)
           @customer = Chronatog::Server::Customer.find(customer_id)
-          @generator = @customer.compliment_generators.find(generator_id)
           @redirect_to = params[:ey_return_to_url]
-          haml :generators
+          "TODO: you have SSO'd in to customer #{@customer.inspect} for scheduler_id"
         end
-        
+
       end
     end
   end
