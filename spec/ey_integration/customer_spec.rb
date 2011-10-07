@@ -11,7 +11,9 @@ describe "customers" do
     describe "when EY sends a service account creation request" do
       before do
         @mock_backend.service
-        DocHelper::RequestLogger.record_next_request('service_account_creation_url', 'service_account_creation_params')
+        DocHelper::RequestLogger.record_next_request('service_account_creation_url', 
+                                                     'service_account_creation_params', 
+                                                     'service_account_creation_response')
         @service_account = @mock_backend.service_account
       end
 

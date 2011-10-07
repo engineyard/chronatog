@@ -99,10 +99,10 @@ The request will look something like this:
 
 bc.. POST "https://chronatog.engineyard.com/eyintegration/api/1/customers"
 {
-  "name"         => "some-account", 
-  "invoices_url" => "http://services.engineyard.com/api/1/partners/7/services/7/service_accounts/7/invoices", 
-  "url"          => "http://services.engineyard.com/api/1/partners/7/services/7/service_accounts/7", 
-  "messages_url" => "http://services.engineyard.com/api/1/partners/7/services/7/service_accounts/7/messages"
+  "name": "some-account", 
+  "invoices_url": "http://services.engineyard.com/api/1/partners/7/services/7/service_accounts/7/invoices", 
+  "url": "http://services.engineyard.com/api/1/partners/7/services/7/service_accounts/7", 
+  "messages_url": "http://services.engineyard.com/api/1/partners/7/services/7/service_accounts/7/messages"
 }
 
 p. Chronatog will handle the callback with the implementation defined in the API controller:
@@ -119,9 +119,11 @@ customer = Chronatog::Server::Customer.create!(create_params)
 
 p. As part of handling the callback, a @Customer@ will be created:
 
-bc.. #<Chronatog::Server::Customer id: 1, service_id: nil, name: "some-account", created_at: "2011-10-07 15:27:48", updated_at: "2011-10-07 15:27:48", api_url: "http://services.engineyard.com/api/1/partners/0/ser...", messages_url: "http://services.engineyard.com/api/1/partners/0/ser...", invoices_url: "http://services.engineyard.com/api/1/partners/0/ser...", plan_type: "freemium", last_billed_at: nil>
+bc.. #<Chronatog::Server::Customer id: 1, service_id: nil, name: "some-account", created_at: "2011-10-07 15:54:41", updated_at: "2011-10-07 15:54:41", api_url: "http://services.engineyard.com/api/1/partners/0/ser...", messages_url: "http://services.engineyard.com/api/1/partners/0/ser...", invoices_url: "http://services.engineyard.com/api/1/partners/0/ser...", plan_type: "freemium", last_billed_at: nil>
 
-p. Chronatog returns a JSON response that tells EngineYard some information about the customer:
+p. Chronatog returns a JSON response that tells EngineYard some information about the customer.
+
+The code for generating that response:
 
 bc.. response_params = {
   :configuration_required   => false,
@@ -138,6 +140,22 @@ response.to_hash.to_json
 
 p. Notice @EY::ServicesAPI::Message@ in the code above.  The subject text should now appear in the context of the Chronatog service on @https://cloud.engineyard.com@.
 
+What the generated response looks like:
+
+bc.. {
+  "service_account": {
+    "url": "https://chronatog.engineyard.com/eyintegration/api/1/customers/1", 
+    "provisioned_services_url": "https://chronatog.engineyard.com/eyintegration/api/1/customers/1/schedulers", 
+    "configuration_url": "https://chronatog.engineyard.com/eyintegration/sso/customers/1", 
+    "configuration_required": false
+  }, 
+  "message": {
+    "message_type": "status", 
+    "body": null, 
+    "subject": "Thanks for signing up for Chronatog!"
+  }
+}
+
 h3. Visiting Chronatog over SSO
 
 With the service enabled, a "Visit" link should appear.  Following this link will redirect to the @configuration_url@ provided in the response to service enablement.
@@ -148,7 +166,7 @@ bc.. "https://chronatog.engineyard.com/eyintegration/sso/customers/1"
 
 p. When EY signs the url it provides additional parameters, such that it looks like this:
 
-bc.. "https://chronatog.engineyard.com/eyintegration/sso/customers/1?access_level=owner&ey_return_to_url=https%3A%2F%2Fcloud.engineyard.com%2Fdashboard&ey_user_id=123&ey_user_name=Person+Name&timestamp=2011-10-07T15%3A27%3A49-07%3A00&signature=AuthHMAC+123edf%3AlIahrJwx4meMijrbWV7jublPToc%3D"
+bc.. "https://chronatog.engineyard.com/eyintegration/sso/customers/1?access_level=owner&ey_return_to_url=https%3A%2F%2Fcloud.engineyard.com%2Fdashboard&ey_user_id=123&ey_user_name=Person+Name&timestamp=2011-10-07T15%3A54%3A42-07%3A00&signature=AuthHMAC+123edf%3Apk6s7g6lADF1YSenJiy8pXJgSgw%3D"
 
 p. Chronatog will verify the SSO request with a before filter that looks like this:
 
@@ -178,17 +196,17 @@ The request will look something like this:
 
 bc.. POST "https://chronatog.engineyard.com/eyintegration/api/1/customers/1/schedulers"
 {
-  "app"          => {
-    "name" => "myapp", 
-    "id" => 1
+  "app": {
+    "name": "myapp", 
+    "id": 1
   }, 
-  "url"          => "http://services.engineyard.com/api/1/service_accounts/9/provisioned_service/1", 
-  "environment"  => {
-    "name" => "myenv", 
-    "framework_env" => "production", 
-    "id" => 1
+  "url": "http://services.engineyard.com/api/1/service_accounts/9/provisioned_service/1", 
+  "environment": {
+    "name": "myenv", 
+    "framework_env": "production", 
+    "id": 1
   }, 
-  "messages_url" => "http://services.engineyard.com/api/1/partners/12/services/11/service_accounts/9/provisioned_service/1/messages"
+  "messages_url": "http://services.engineyard.com/api/1/partners/12/services/11/service_accounts/9/provisioned_service/1/messages"
 }
 
 p. Chronatog will handle the callback with the implementation defined in the API controller:
@@ -206,9 +224,11 @@ scheduler = customer.schedulers.create!(create_params)
 
 p. As part of handling the callback, a @Customer@ will be created:
 
-bc.. #<Chronatog::Server::Scheduler id: 1, customer_id: 1, auth_username: "fcf5896d2caa01", auth_password: "20c3fc5a8324426423303fbce3", created_at: "2011-10-07 15:27:49", updated_at: "2011-10-07 15:27:49", environment_name: "myenv", app_name: "myapp", messages_url: "http://services.engineyard.com/api/1/partners/11/se...", decomissioned_at: nil, last_billed_at: nil>
+bc.. #<Chronatog::Server::Scheduler id: 1, customer_id: 1, auth_username: "acde0341715fb5", auth_password: "f920f21f0839804729d10a7405", created_at: "2011-10-07 15:54:42", updated_at: "2011-10-07 15:54:42", environment_name: "myenv", app_name: "myapp", messages_url: "http://services.engineyard.com/api/1/partners/11/se...", decomissioned_at: nil, last_billed_at: nil>
 
-p. Chronatog returns a JSON response that tells EngineYard some information about the created scheduler:
+p. Chronatog returns a JSON response that tells EngineYard some information about the created scheduler.
+
+The code for generating the response:
 
 bc.. response_params = {
   :configuration_required => false,
@@ -228,6 +248,25 @@ response.to_hash.to_json
 
 p. Notice @EY::ServicesAPI::Message@ in the code above.  The subject text should now appear in the context of the relevant application and environment on @https://cloud.engineyard.com@.
 
+What the response JSON looks like:
+
+bc.. {
+  "provisioned_service": {
+    "vars": {
+      "CHRONOS_AUTH_USERNAME": "fd12cbc03357cb", 
+      "CHRONOS_SERVICE_URL": "https://chronatog.engineyard.com/chronatogapi/1/jobs", 
+      "CHRONOS_AUTH_PASSWORD": "ca55f55705ac0abe9ffd97cdde"
+    }, 
+    "url": "https://chronatog.engineyard.com/eyintegration/api/1/customers/1/schedulers/1", 
+    "configuration_url": null, 
+    "configuration_required": false
+  }, 
+  "message": {
+    "message_type": "status", 
+    "body": null, 
+    "subject": "Your scheduler has been created and is ready for use!"
+  }
+}
 
 h3. More
 

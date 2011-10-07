@@ -16,7 +16,9 @@ describe "schedulers" do
 
       describe "when provisioned" do
         before do
-          DocHelper::RequestLogger.record_next_request('service_provisioning_url', 'service_provisioning_params')
+          DocHelper::RequestLogger.record_next_request('service_provisioning_url', 
+                                                       'service_provisioning_params',
+                                                       'service_provisioning_response_json')
           @mock_backend.provisioned_service
         end
 

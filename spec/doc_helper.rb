@@ -1,8 +1,8 @@
 class DocHelper
 
   class RequestLogger
-    def self.record_next_request(url_key, params_key)
-      request_recordians << [url_key, params_key]
+    def self.record_next_request(url_key, params_key, response_json_key = nil)
+      request_recordians << [url_key, params_key, response_json_key]
     end
     def self.request_recordians
       @request_recordians ||= []
@@ -10,19 +10,25 @@ class DocHelper
 
     def initialize(app) @app = app end
     def call(env)
-      url_key, params_key = RequestLogger.request_recordians.pop
+      url_key, params_key, response_json_key = RequestLogger.request_recordians.pop
       if url_key
         request = Rack::Request.new(env)
         DocHelper.save(url_key, request.url)
       end
       if params_key
-        DocHelper.save(params_key, JSON::parse(env["rack.input"].string))
+        DocHelper.save(params_key, JSON::parse(env["rack.input"].string), :json)
       end
-      @app.call env
+      tuple = @app.call(env)
+      if response_json_key
+        res_body = ""
+        tuple.last.each{|v| res_body << v.to_s }
+        DocHelper.save(response_json_key, JSON::parse(res_body), :json)
+      end
+      tuple
     end
   end
 
-  def self.save(key, obj)
+  def self.save(key, obj, format = :ruby)
     string = obj.inspect
     if obj.is_a?(Hash)
       string.gsub!(", \"", ", \n\"")
@@ -58,6 +64,10 @@ class DocHelper
           nil
         end
       end.compact.reverse.join("\n")
+      if format == :json
+        string.gsub!(/[ ]*\=\>/, ":")
+        string.gsub!("nil,","null,")
+      end
     end
     snippets[key] = string
   end

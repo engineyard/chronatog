@@ -99,11 +99,17 @@ p. As part of handling the callback, a @Customer@ will be created:
 
 bc.. <%= customer_creation_created_customer %>
 
-p. Chronatog returns a JSON response that tells EngineYard some information about the customer:
+p. Chronatog returns a JSON response that tells EngineYard some information about the customer.
+
+The code for generating that response:
 
 bc.. <%= customer_creation_response %>
 
 p. Notice @EY::ServicesAPI::Message@ in the code above.  The subject text should now appear in the context of the Chronatog service on @https://cloud.engineyard.com@.
+
+What the generated response looks like:
+
+bc.. <%= service_account_creation_response %>
 
 h3. Visiting Chronatog over SSO
 
@@ -142,12 +148,17 @@ p. As part of handling the callback, a @Customer@ will be created:
 
 bc.. <%= service_provisioning_created_scheduler %>
 
-p. Chronatog returns a JSON response that tells EngineYard some information about the created scheduler:
+p. Chronatog returns a JSON response that tells EngineYard some information about the created scheduler.
+
+The code for generating the response:
 
 bc.. <%= service_provisioning_response %>
 
 p. Notice @EY::ServicesAPI::Message@ in the code above.  The subject text should now appear in the context of the relevant application and environment on @https://cloud.engineyard.com@.
 
+What the response JSON looks like:
+
+bc.. <%= service_provisioning_response_json %>
 
 h3. More
 
