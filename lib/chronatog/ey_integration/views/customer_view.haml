@@ -1,0 +1,8 @@
+%a{:href => "logout"} Go Back to EngineYard Cloud
+#current_plan
+  = @customer.current_plan_name
+%form#plan_selection{:action => "#{@customer.id}/change_plan", :method => "POST"}
+  %select#plan{:name => "plan_type"}
+    %option{:value => "freemium"} Freemium
+    %option{:value => "awesome"} OMG IT'S SO AWESOME
+  %input{:value => "Change Plan", :type => "submit"}

@@ -111,9 +111,9 @@ p. When EY signs the url it provides additional parameters, such that it looks l
 
 bc.. <%= service_configuration_url_signed %>
 
-p. Chronatog will parse this information with code that looks like this:
+p. Chronatog will verify the SSO request with a before filter that looks like this:
 
-bc.. <%= parse_sso_redirect %>
+bc.. <%= sso_before_filter %>
 
 h3. Provisioning a Chronatog Scheduler
 

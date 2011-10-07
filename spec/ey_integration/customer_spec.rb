@@ -22,31 +22,72 @@ describe "customers" do
         #TODO: assert more on the customer ?
       end
 
-      it "can visit the service" do
-        configuration_url = @service_account[:pushed_service_account][:configuration_url]
-        DocHelper.save("service_configuration_url", configuration_url)
+      describe "visiting over SSO" do
+        before do
+          @configuration_url = @service_account[:pushed_service_account][:configuration_url]
+          DocHelper.save("service_configuration_url", @configuration_url)
 
-        params = {
-          'timestamp' => Time.now.iso8601,
-          'ey_user_id' => 123,
-          'ey_user_name' => "Person Name",
-          'ey_return_to_url' => "https://cloud.engineyard.com/accounts/123/services",
-          'access_level' => 'owner',
-        }
-        signed_configuration_url = EY::ApiHMAC::SSO.sign(configuration_url, 
-                                                         params, 
-                                                         @service_account[:service][:partner][:auth_id], 
-                                                         @service_account[:service][:partner][:auth_key])
+          params = {
+            'timestamp' => Time.now.iso8601,
+            'ey_user_id' => 123,
+            'ey_user_name' => "Person Name",
+            'ey_return_to_url' => "https://cloud.engineyard.com/dashboard",
+            'access_level' => 'owner',
+          }
+          signed_configuration_url = EY::ApiHMAC::SSO.sign(@configuration_url, 
+                                                           params, 
+                                                           @service_account[:service][:partner][:auth_id], 
+                                                           @service_account[:service][:partner][:auth_key])
 
-        DocHelper.save("service_configuration_url_signed", signed_configuration_url)
+          DocHelper.save("service_configuration_url_signed", signed_configuration_url)
 
-        puts @service_account[:service][:partner][:auth_id].inspect
-        puts @service_account[:service][:partner][:auth_key].inspect
+          visit signed_configuration_url
+        end
 
-        puts "signed: \n" + signed_configuration_url.inspect
+        it "logs you into Chronatog" do
+          visit @configuration_url
+          page.status_code.should eq 200
+        end
 
-        visit signed_configuration_url
-        page.status_code.should eq 200
+        it "works" do
+          page.status_code.should eq 200
+          page.find("#current_plan").text.strip.should eq "Freemium"
+        end
+
+        it "let's you select the freemium plan" do
+          within("#plan_selection") do
+            select "Freemium"
+            click_button "Change Plan"
+          end
+          page.status_code.should eq 200
+          page.find("#current_plan").text.strip.should eq "Freemium"
+        end
+
+        it "let's you select the OMG IT'S SO AWESOME plan" do
+          within("#plan_selection") do
+            select "OMG IT'S SO AWESOME"
+            click_button "Change Plan"
+          end
+          page.status_code.should eq 200
+          page.find("#current_plan").text.strip.should eq "OMG IT'S SO AWESOME"
+        end
+
+        describe "when you go back to AWSM" do
+          before do
+            click_link "Go Back to EngineYard Cloud"
+          end
+
+          it "works" do
+            page.status_code.should eq 200
+            page.body.should match "Hello this is fake AWSM dashboard"
+          end
+
+          it "logs you out of Chronatog" do
+            visit @configuration_url
+            page.status_code.should eq 401
+          end
+
+        end
       end
 
       it "can handle a delete" do

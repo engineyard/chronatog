@@ -1,12 +1,29 @@
 require 'chronatog/ey_integration'
 require File.join( File.dirname(__FILE__), "../doc_helper" )
 
+class HasADashboardAWSM < Sinatra::Base
+  enable :raise_errors
+  disable :dump_errors
+  disable :show_exceptions
+
+  get '/dashboard' do
+    "Hello this is fake AWSM dashboard"
+  end
+
+end
+
 class EyIntegrationTestHelper
 
   def app
+    chronatog_base_url = "#{base_url}/"
     @app ||= Rack::Builder.new do
       use DocHelper::RequestLogger
-      run Chronatog::EyIntegration.app
+      map chronatog_base_url do
+        run Chronatog::EyIntegration.app
+      end
+      map "https://cloud.engineyard.com/" do
+        run HasADashboardAWSM
+      end
     end
   end
 

@@ -15,6 +15,21 @@ module Chronatog
         ActiveRecord::Base.establish_connection(CONNECTION_ARGS)
       end
 
+
+      def self.reset!
+        decendants.each do |model_class| 
+          model_class.reset_column_information
+          Chronatog::Server.send(:remove_const, model_class.to_s.split("::").last.to_sym)
+        end
+        @decendants = []
+      end
+      def self.decendants
+        @decendants ||= []
+      end
+      def self.inherited(klass)
+        decendants << klass
+      end
+
     end
   end
 end

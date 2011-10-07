@@ -5,7 +5,18 @@ module Chronatog
       def self.included(base)
         base.class_eval do
           belongs_to :service
+          after_initialize do
+            self.plan_type ||= 'freemium'
+          end
         end
+      end
+
+      def plans
+        [['freemium', "Freemium"], ['awesome', "OMG IT'S SO AWESOME"]]
+      end
+
+      def current_plan_name
+        plans.detect{|plan| plan[0] == plan_type }[1]
       end
 
       def create_scheduled_job(job)
