@@ -1,3 +1,7 @@
+h2. Disclaimer!
+
+The following document describes Chronatog as a web cron service.  The descriptions presented are accurate with one important exception: *ACTUAL CRON IS NOT YET IMPLEMENTED*.  This means you can register as many callbacks as you want, see them, delete them etc... but they will never actually run.  Chronatog is currently entirely missing it's underlying actual cron component.
+
 h1. Chronatog
 
 Chronatog is:
@@ -68,22 +72,22 @@ Once enabled for testing, you should see your service available if you navigate 
 
 h3. Enabling your service
 
-When you click 'enable', EngineYard will make a call to your callback URL to create a service account.  In the case of Chronatog, this callback is handled by creating a customer record.
+When you click 'enable', EngineYard will make a call to your @service_accounts_url@ to create a service account.  In the case of Chronatog, this callback is handled by creating a customer record.
 
-With a request that looks like:
+The request will look something like this:
 
 bc.. POST <%= service_account_creation_url %>
 <%= service_account_creation_params %>
 
-p. Chronatog will handle the callback with the implementation defined in @Chronatog::EyIntegration::Application@ as:
+p. Chronatog will handle the callback with the implementation defined in the API controller:
 
 bc.. <%= customer_creation %>
 
-p. As part of handling the callback, a @Customer@ will be created, looking something like:
+p. As part of handling the callback, a @Customer@ will be created:
 
 bc.. <%= customer_creation_created_customer %>
 
-p. Chronatog returns a JSON response that tells EngineYard some information about the customer.
+p. Chronatog returns a JSON response that tells EngineYard some information about the customer:
 
 bc.. <%= customer_creation_response %>
 
@@ -94,6 +98,34 @@ h3. Verifying requests from Engine Yard
 By using the @EY::ApiHMAC::ApiAuth::LookupServer@ middleware in the API controller, Chronatog verifies that each request to it's API is correctly signed by the requester.  The block passed to the middleware is expected to return the @auth_key@ correspondent to the @auth_id@ given.  It is then up to @EY::ApiHMAC@ to calculate a signature and verify that it matches the one in the request (@env@).
 
 bc.. <%= hmac_middleware %>
+
+h3. Provisioning a Chronatog Scheduler
+
+With the service enabled in EngineYard cloud, it should appear available for provisioning when you drill-down in the UI to viewing a single environment within the context of a single application.
+
+Clicking "Provision" will cause EngineYard to call to your @provisioned_services_url@ to create a provisioned service.  In the case of Chronatog, this callback is handled by creating a scheduler.
+
+The request will look something like this:
+
+bc.. POST <%= service_provisioning_url %>
+<%= service_provisioning_params %>
+
+p. Chronatog will handle the callback with the implementation defined in the API controller:
+
+bc.. <%= service_provisioning %>
+
+p. As part of handling the callback, a @Customer@ will be created:
+
+bc.. <%= service_provisioning_created_scheduler %>
+
+p. Chronatog returns a JSON response that tells EngineYard some information about the created scheduler:
+
+bc.. <%= service_provisioning_response %>
+
+p. Notice @EY::ServicesAPI::Message@ in the code above.  The subject text should now appear in the context of the relevant application and environment on @https://cloud.engineyard.com@.
+
+
+h2. TODO
 
 h3. Visiting Chronatog over SSO
 
@@ -114,8 +146,6 @@ bc.. <%= @parse_sso_redirect %>
 h3. More
 
 TODO: disabling service makes a callback, and Chronatog responds by sending a bill.
-
-TODO: provisioning service makes a callback, Chronatog generates API keys.
 
 TODO: provisioned service SSO.
 

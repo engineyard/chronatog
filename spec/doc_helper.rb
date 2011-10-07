@@ -25,21 +25,39 @@ class DocHelper
   def self.save(key, obj)
     string = obj.inspect
     if obj.is_a?(Hash)
-      if obj.keys.first.is_a?(String)
-        max_key_length = obj.keys.sort_by{|k| k.to_s.length}.last.to_s.length
-        string.gsub!(", \"", ", \n  \"")
-        string.gsub!("{", "{\n  ")
-        string.gsub!("}", "\n}")
-        string.gsub!("=>", " => ")
-        obj.keys.each{|k| string.gsub!("\"#{k}\"", "\"#{(k.to_s + '"').ljust(max_key_length+1)}") }
-      else
-        max_key_length = obj.keys.sort_by{|k| k.to_s.length}.last.to_s.length
-        string.gsub!(", :", ", \n  :")
-        string.gsub!("{", "{\n  ")
-        string.gsub!("}", "\n}")
-        string.gsub!("=>", " => ")
-        obj.keys.each{|k| string.gsub!(":#{k}", ":#{k.to_s.ljust(max_key_length)}") }
-      end
+      string.gsub!(", \"", ", \n\"")
+      string.gsub!(", :", ", \n:")
+      string.gsub!("{", "{\n")
+      string.gsub!("}", "\n}")
+      string.gsub!("=>", " => ")
+      max_key_length = obj.keys.sort_by{|k| k.to_s.length}.last.to_s.length
+      obj.keys.each{|k| string.gsub!("\"#{k}\"", "\"#{(k.to_s + '"').ljust(max_key_length+1)}") }
+      obj.keys.each{|k| string.gsub!(":#{k}", ":#{k.to_s.ljust(max_key_length)}") }
+      depth = 0
+      string = string.split("\n").map do |line|
+        if line.match(/\}/)
+          depth -= 1
+        end
+        transformed = ("  " * depth) + line
+        if line.match(/\]/)
+          depth -= 1
+        end
+        if line.match(/\{|\[/)
+          depth += 1
+        end
+        transformed
+      end.join("\n")
+      prev = ""
+      string = string.split("\n").reverse.map do |line|
+        if line.match(/\=\>/)
+          line + prev
+        elsif line.match(/^\{|\}/)
+          line
+        else
+          prev = (line + prev).strip
+          nil
+        end
+      end.compact.reverse.join("\n")
     end
     snippets[key] = string
   end

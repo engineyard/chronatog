@@ -16,24 +16,26 @@ describe "schedulers" do
 
       describe "when provisioned" do
         before do
+          DocHelper::RequestLogger.record_next_request('service_provisioning_url', 'service_provisioning_params')
           @mock_backend.provisioned_service
         end
 
         it "creates a scheduler" do
           @customer.schedulers.reload.size.should eq 1
-          @scheduler = @customer.schedulers.reload.first
+          scheduler = @customer.schedulers.reload.first
+          DocHelper.save("service_provisioning_created_scheduler", scheduler)
 
-          @scheduler.should_not be_nil
-          @scheduler.decomissioned_at.should be_nil
-          #TODO: assert more on the scheduler
+          scheduler.should_not be_nil
+          scheduler.decomissioned_at.should be_nil
+          #TODO: assert more on the scheduler?
         end
 
         it "can handle a delete" do
           @mock_backend.destroy_provisioned_service
           @customer.reload
 
-          @scheduler = @customer.schedulers.reload.first
-          @scheduler.decomissioned_at.should_not be_nil
+          scheduler = @customer.schedulers.reload.first
+          scheduler.decomissioned_at.should_not be_nil
         end
       end
     end

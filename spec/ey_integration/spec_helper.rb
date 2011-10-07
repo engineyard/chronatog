@@ -11,7 +11,7 @@ class EyIntegrationTestHelper
   end
 
   def base_url
-    "http://chronatog.example.com"
+    "https://chronatog.engineyard.com"
   end
 
   def reset!

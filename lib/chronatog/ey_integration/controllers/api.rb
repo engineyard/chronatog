@@ -16,9 +16,9 @@ module Chronatog
         #################
 
         post '/customers' do
-          json_body = request.body.read
 #{customer_creation{
-          service_account = EY::ServicesAPI::ServiceAccountCreation.from_request(json_body)
+          request_body = request.body.read
+          service_account = EY::ServicesAPI::ServiceAccountCreation.from_request(request_body)
           create_params = {
             :name         => service_account.name,
             :api_url      => service_account.url,
@@ -52,8 +52,9 @@ module Chronatog
         end
 
         post "/customers/:customer_id/schedulers" do |customer_id|
-          json_body = request.body.read
-          provisioned_service = EY::ServicesAPI::ProvisionedServiceCreation.from_request(json_body)
+#{service_provisioning{
+          request_body = request.body.read
+          provisioned_service = EY::ServicesAPI::ProvisionedServiceCreation.from_request(request_body)
 
           customer = Chronatog::Server::Customer.find(customer_id)
           create_params = {
@@ -62,7 +63,8 @@ module Chronatog
             :messages_url => provisioned_service.messages_url
           }
           scheduler = customer.schedulers.create!(create_params)
-
+#}service_provisioning}
+#{service_provisioning_response{
           response_params = {
             :configuration_required => false,
             :vars     => {
@@ -78,6 +80,7 @@ module Chronatog
           content_type :json
           headers 'Location' => response.url
           response.to_hash.to_json
+#}service_provisioning_response}
         end
 
         delete "/customers/:customer_id/schedulers/:job_id" do |customer_id, job_id|

@@ -18,19 +18,6 @@ module Chronatog
           true_base_url + SSO_PATH_PREFIX
         end
 
-        # def initialize(base_url)
-        #   @base_url = base_url
-        #   super(nil)
-        # end
-        # 
-        # def base_url
-        #   true_base_url + @base_url
-        # end
-
-        # def base_url
-        #   true_base_url + PATHPREFIX
-        # end
-
         def true_base_url
           uri = URI.parse(request.url)
           uri.to_s.gsub(uri.request_uri, '')

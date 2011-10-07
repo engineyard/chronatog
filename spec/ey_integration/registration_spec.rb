@@ -15,7 +15,7 @@ describe "setup" do
   describe "with the service registered" do
     before do
 #{set_chronatog_url{
-      chronatog_url = "http://chronatog.example.com"
+      chronatog_url = "https://chronatog.engineyard.com"
 #}set_chronatog_url}
       registration_url = @mock_backend.partner[:registration_url]
       DocHelper.save('registration_url', registration_url)
