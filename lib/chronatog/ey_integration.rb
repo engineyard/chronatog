@@ -23,11 +23,8 @@ module Chronatog
     # Registering this service with EY #
     ####################################
 
-    #TODO: make a rake task for registering
-
     def self.register_service(service_registration_url, base_url)
-      #TODO: raise if we don't have any credentials
-      create_service("Chronatog", service_registration_params(base_url), service_registration_url)
+      create_service(service_registration_params(base_url), service_registration_url)
     end
 
     def self.service_registration_params(base_url)
@@ -41,13 +38,9 @@ module Chronatog
       }
     end
 
-    def self.create_service(service_name, registration_params, service_registration_url)
-      service = Chronatog::Server::Service.create!(:name => service_name, :state => 'unregistered')
+    def self.create_service(registration_params, service_registration_url)
       remote_service = connection.register_service(service_registration_url, registration_params)
-      service.url = remote_service.url
-      service.state = "registered"
-      service.save!
-      service
+      Service.write!(remote_service.url)
     end
 
     #################################
@@ -55,12 +48,25 @@ module Chronatog
     #################################
 
     def self.setup!
-      if api_creds
-        EY::ServicesAPI.setup!(:auth_id => api_creds.auth_id, :auth_key => api_creds.auth_key)
-      end
+      Chronatog::Server.setup!
+      Schema.setup!
+    end
+
+    def self.teardown!
+      Chronatog::Server.teardown!
+      destroy_service
+      destroy_creds
+    end
+
+    def self.reset!
+      teardown!
+      setup!
     end
 
     def self.connection
+      unless EY::ServicesAPI.setup?
+        EY::ServicesAPI.setup!(:auth_id => api_creds.auth_id, :auth_key => api_creds.auth_key)
+      end
       EY::ServicesAPI.connection
     end
 
@@ -74,6 +80,7 @@ module Chronatog
 
     def self.destroy_creds
       api_creds.destroy if api_creds
+      @creds = nil
     end
 
     class Credentials < Struct.new(:auth_id, :auth_key)
@@ -96,18 +103,32 @@ module Chronatog
       end
     end
 
-    def self.setup!
-      Chronatog::Server.setup!
-      Schema.setup!
+    def self.service
+      @service ||= Service.load
     end
 
-    def self.teardown!
-      Chronatog::Server.teardown!
+    def self.destroy_service
+      service.destroy if service
+      @service = nil
     end
 
-    def self.reset!
-      teardown!
-      setup!
+    class Service < Struct.new(:url)
+      CONFIG_PATH = File.expand_path('../../../config/ey_registered_service.yml', __FILE__)
+      def self.load
+        if File.exists?(CONFIG_PATH)
+          Service.new(YAML.load_file(CONFIG_PATH)[:url])
+        end
+      end
+      def self.write!(url)
+        service = Service.new(:url => url)
+        File.open(CONFIG_PATH, "w") do |fp|
+          fp.write({:url => service.url})
+        end
+        service
+      end
+      def destroy
+        FileUtils.rm_f(CONFIG_PATH)
+      end
     end
 
   end

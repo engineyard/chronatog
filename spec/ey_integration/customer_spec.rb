@@ -5,26 +5,26 @@ describe "customers" do
 
   context "with the service registered" do
     before do
-      # Chronatog::EyIntegration.save_creds(@mock_backend.partner[:auth_id], @mock_backend.partner[:auth_key])
-      base_url = "http://chronatog.local"
-      @service = Chronatog::EyIntegration.register_service(@mock_backend.partner[:registration_url], base_url)
+      Chronatog::EyIntegration.register_service(@mock_backend.partner[:registration_url], @test_helper.base_url)
     end
 
     describe "when EY sends a service account creation request" do
       before do
-        @mock_backend.create_service_account
+        @mock_backend.service
+        DocHelper::RequestLogger.record_next_request('service_account_creation_url', 'service_account_creation_params')
+        @mock_backend.service_account
       end
 
       it "creates a customer" do
-        @service.reload
-        @service.customers.size.should eq 1
+        Chronatog::Server::Customer.count.should eq 1
+        created_customer = Chronatog::Server::Customer.first
+        DocHelper.save("customer_creation_created_customer", created_customer)
         #TODO: assert more on the customer
       end
 
       it "can handle a delete" do
         @mock_backend.destroy_service_account
-        @service.reload
-        @service.customers.size.should eq 0
+        Chronatog::Server::Customer.count.should eq 0
       end
     end
 

@@ -49,22 +49,23 @@ To register your service, you make a POST request to the registration url, passi
 Example:
 
 bc.. $ script/console
+> registration_url = "http://services.engineyard.com/api/1/partners/4/services"
 > chronatog_url = "http://chronatog.example.com"
-> Chronatog::EyIntegration.register_service("https://services.engineyard.com/api/1/partners/1/services", chronatog_url)
-=> #<Chronatog::Server::Service id: 1, name: "Chronatog", state: "registered", url: "services.engineyard.com/api/1/partners/1/services/12", created_at: "2011-09-23 14:16:17", updated_at: "2011-09-23 14:16:17">
+> registered_service = Chronatog::EyIntegration.register_service(registration_url, chronatog_url)
+=> #<Chronatog::Server::Service id: 1, name: "Chronatog", state: "registered", url: "http://services.engineyard.com/api/1/partners/4/ser...", created_at: "2011-10-03 15:44:08", updated_at: "2011-10-03 15:44:08">
 
 p. Behind the scene, Chronatog is calling @register_service@ on a @EY::ServicesAPI::Connection@.  The first parameter is the @registration_url@. The second parameter is a hash describing the service being registered.
 
 In the case of this example it looks something like:
 
 bc.. {
-  :name => "Chronatog",
-  :description => "Web cron as a service.",
-  :service_accounts_url =>     "http://chronatog.example.com/eyintegration/api/1/customers",
-  :home_url =>                 "http://chronatog.example.com/",
-  :terms_and_conditions_url => "http://chronatog.example.com/terms",
-  :vars => ["CHRONOS_AUTH_USERNAME", "CHRONOS_AUTH_PASSWORD", "CHRONOS_SERVICE_URL"]
-}
+  :service_accounts_url     => "http://chronatog.example.com/eyintegration/api/1/customers", 
+  :terms_and_conditions_url => "http://chronatog.example.com/terms", 
+  :vars                     => ["CHRONOS_AUTH_USERNAME", "CHRONOS_AUTH_PASSWORD", "CHRONOS_SERVICE_URL"], 
+  :name                     => "Chronatog", 
+  :home_url                 => "http://chronatog.example.com/", 
+  :description              => "Web cron as a service."
+} 
 
 h3. Viewing your service on cloud.engineyard.com
 
@@ -80,38 +81,40 @@ When you click 'enable', EngineYard will make a call to your callback URL to cre
 With a request that looks like:
 
 bc.. POST "http://chronatog.example.com/eyintegration/api/1/customers"
-{ TODO }
+{
+  "invoices_url" => "http://services.engineyard.com/api/1/partners/1/services/1/service_accounts/1/invoices", 
+  "name"         => "some-account", 
+  "url"          => "http://services.engineyard.com/api/1/partners/1/services/1/service_accounts/1", 
+  "messages_url" => "http://services.engineyard.com/api/1/partners/1/services/1/service_accounts/1/messages"
+}
 
 p. Chronatog will handle the callback with the implementation defined in @Chronatog::EyIntegration::Application@ as:
 
-bc.. #parse the request
-service_account = EY::ServicesAPI::ServiceAccountCreation.from_request(request.body.read)
+bc.. service_account = EY::ServicesAPI::ServiceAccountCreation.from_request(json_body)
 #create a new customer
-customer = service.customers.create!( :name => service_account.name,
-      :api_url      => service_account.url,
-      :messages_url => service_account.messages_url,
-      :invoices_url => service_account.invoices_url)
+customer = service.customers.create!( :name         => service_account.name,
+                                      :api_url      => service_account.url,
+                                      :messages_url => service_account.messages_url,
+                                      :invoices_url => service_account.invoices_url)
 
 p. As part of handling the callback, a @Customer@ will be created, looking something like:
 
-bc.. <Chronatog::Server::Customer id: 1, TODO>
+bc.. #<Chronatog::Server::Customer id: 1, service_id: 1, name: "some-account", created_at: "2011-10-03 15:44:08", updated_at: "2011-10-03 15:44:08", api_url: "http://services.engineyard.com/api/1/partners/0/ser...", messages_url: "http://services.engineyard.com/api/1/partners/0/ser...", invoices_url: "http://services.engineyard.com/api/1/partners/0/ser...", plan_type: nil, last_billed_at: nil>
 
 p. Chronatog returns a JSON response that tells EngineYard some information about the customer.
 
 bc.. #create a response hash with information about the customer
-response_hash = service_account.creation_response_hash do |presenter|
-  presenter.configuration_required = false
-  presenter.configuration_url = customer.configuration_url(base_url)
-  presenter.provisioned_services_url = customer.provisioned_services_url(base_url)
-  presenter.url = customer.url(base_url)
-  presenter.message = EY::ServicesAPI::Message.new(:message_type => "status", :subject => customer.singup_message)
-end
+response = EY::ServicesAPI::ServiceAccountResponse.new(:configuration_required => false,
+                                                       :configuration_url        => customer.configuration_url(base_url),
+                                                       :provisioned_services_url => customer.provisioned_services_url(base_url),
+                                                       :url                      => customer.url(base_url),
+                                                       :message                  => EY::ServicesAPI::Message.new(:message_type => "status", :subject => customer.singup_message))
 #Set the Content-Type to JSON
 content_type :json
 #Set the Location header for extra REST (has the same value as response_hash["service_account"]["url"] )
-headers 'Location' => customer.url(base_url)
+headers 'Location' => response.url
 #render the response_hash as json
-response_hash.to_json
+response.to_hash.to_json
 
 h3. More
 

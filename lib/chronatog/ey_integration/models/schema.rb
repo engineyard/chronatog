@@ -3,21 +3,9 @@ module Chronatog
     class Schema
       def self.setup!
         conn = Chronatog::Server::Model.connection
-        unless conn.table_exists?(:creds)
+        unless conn.table_exists?(:ey_integration_schema)
 
-          conn.create_table "creds", :force => true do |t|
-            t.string   "auth_id"
-            t.string   "auth_key"
-            t.datetime "created_at"
-            t.datetime "updated_at"
-          end
-
-          conn.create_table "services", :force => true do |t|
-            t.string   "name"
-            t.string   "state"
-            t.string   "url"
-            t.datetime "created_at"
-            t.datetime "updated_at"
+          conn.create_table "ey_integration_schema", :force => true do |t|
           end
 
           conn.add_column "customers", "api_url",        :string

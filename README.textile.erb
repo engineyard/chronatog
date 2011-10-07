@@ -49,22 +49,16 @@ To register your service, you make a POST request to the registration url, passi
 Example:
 
 bc.. $ script/console
-> chronatog_url = "http://chronatog.example.com"
-> Chronatog::EyIntegration.register_service("https://services.engineyard.com/api/1/partners/1/services", chronatog_url)
-=> #<Chronatog::Server::Service id: 1, name: "Chronatog", state: "registered", url: "services.engineyard.com/api/1/partners/1/services/12", created_at: "2011-09-23 14:16:17", updated_at: "2011-09-23 14:16:17">
+> registration_url = <%= registration_url %>
+> <%= set_chronatog_url %>
+> <%= register_service_call %>
+=> <%= register_service_result %>
 
 p. Behind the scene, Chronatog is calling @register_service@ on a @EY::ServicesAPI::Connection@.  The first parameter is the @registration_url@. The second parameter is a hash describing the service being registered.
 
 In the case of this example it looks something like:
 
-bc.. {
-  :name => "Chronatog",
-  :description => "Web cron as a service.",
-  :service_accounts_url =>     "http://chronatog.example.com/eyintegration/api/1/customers",
-  :home_url =>                 "http://chronatog.example.com/",
-  :terms_and_conditions_url => "http://chronatog.example.com/terms",
-  :vars => ["CHRONOS_AUTH_USERNAME", "CHRONOS_AUTH_PASSWORD", "CHRONOS_SERVICE_URL"]
-}
+bc.. <%= service_registration_params %> 
 
 h3. Viewing your service on cloud.engineyard.com
 
@@ -79,8 +73,8 @@ When you click 'enable', EngineYard will make a call to your callback URL to cre
 
 With a request that looks like:
 
-bc.. POST "http://chronatog.example.com/eyintegration/api/1/customers"
-{ TODO }
+bc.. POST <%= service_account_creation_url %>
+<%= service_account_creation_params %>
 
 p. Chronatog will handle the callback with the implementation defined in @Chronatog::EyIntegration::Application@ as:
 
@@ -88,7 +82,7 @@ bc.. <%= customer_creation %>
 
 p. As part of handling the callback, a @Customer@ will be created, looking something like:
 
-bc.. <Chronatog::Server::Customer id: 1, TODO>
+bc.. <%= customer_creation_created_customer %>
 
 p. Chronatog returns a JSON response that tells EngineYard some information about the customer.
 
