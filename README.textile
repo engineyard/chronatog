@@ -119,7 +119,7 @@ customer = Chronatog::Server::Customer.create!(create_params)
 
 p. As part of handling the callback, a @Customer@ will be created:
 
-bc.. #<Chronatog::Server::Customer id: 1, service_id: nil, name: "some-account", created_at: "2011-10-07 15:27:05", updated_at: "2011-10-07 15:27:05", api_url: "http://services.engineyard.com/api/1/partners/0/ser...", messages_url: "http://services.engineyard.com/api/1/partners/0/ser...", invoices_url: "http://services.engineyard.com/api/1/partners/0/ser...", plan_type: "freemium", last_billed_at: nil>
+bc.. #<Chronatog::Server::Customer id: 1, service_id: nil, name: "some-account", created_at: "2011-10-07 15:27:48", updated_at: "2011-10-07 15:27:48", api_url: "http://services.engineyard.com/api/1/partners/0/ser...", messages_url: "http://services.engineyard.com/api/1/partners/0/ser...", invoices_url: "http://services.engineyard.com/api/1/partners/0/ser...", plan_type: "freemium", last_billed_at: nil>
 
 p. Chronatog returns a JSON response that tells EngineYard some information about the customer:
 
@@ -148,7 +148,7 @@ bc.. "https://chronatog.engineyard.com/eyintegration/sso/customers/1"
 
 p. When EY signs the url it provides additional parameters, such that it looks like this:
 
-bc.. "https://chronatog.engineyard.com/eyintegration/sso/customers/1?access_level=owner&ey_return_to_url=https%3A%2F%2Fcloud.engineyard.com%2Fdashboard&ey_user_id=123&ey_user_name=Person+Name&timestamp=2011-10-07T15%3A27%3A05-07%3A00&signature=AuthHMAC+123edf%3A3S%2BxGXRpxVXSBVdA4VvRVZCC66A%3D"
+bc.. "https://chronatog.engineyard.com/eyintegration/sso/customers/1?access_level=owner&ey_return_to_url=https%3A%2F%2Fcloud.engineyard.com%2Fdashboard&ey_user_id=123&ey_user_name=Person+Name&timestamp=2011-10-07T15%3A27%3A49-07%3A00&signature=AuthHMAC+123edf%3AlIahrJwx4meMijrbWV7jublPToc%3D"
 
 p. Chronatog will verify the SSO request with a before filter that looks like this:
 
@@ -206,7 +206,7 @@ scheduler = customer.schedulers.create!(create_params)
 
 p. As part of handling the callback, a @Customer@ will be created:
 
-bc.. #<Chronatog::Server::Scheduler id: 1, customer_id: 1, auth_username: "c6e116dfa6c040", auth_password: "4df344f7db69e304e6c877e87a", created_at: "2011-10-07 15:27:06", updated_at: "2011-10-07 15:27:06", environment_name: "myenv", app_name: "myapp", messages_url: "http://services.engineyard.com/api/1/partners/11/se...", decomissioned_at: nil, last_billed_at: nil>
+bc.. #<Chronatog::Server::Scheduler id: 1, customer_id: 1, auth_username: "fcf5896d2caa01", auth_password: "20c3fc5a8324426423303fbce3", created_at: "2011-10-07 15:27:49", updated_at: "2011-10-07 15:27:49", environment_name: "myenv", app_name: "myapp", messages_url: "http://services.engineyard.com/api/1/partners/11/se...", decomissioned_at: nil, last_billed_at: nil>
 
 p. Chronatog returns a JSON response that tells EngineYard some information about the created scheduler:
 
