@@ -32,7 +32,7 @@ GEM
     ey_api_hmac (0.0.17)
       json
       rack-client
-    ey_services_api (0.1.0)
+    ey_services_api (0.1.1)
       ey_api_hmac
       json
     ey_services_fake (0.0.1)
