@@ -1,6 +1,11 @@
 source 'http://rubygems.org'
 
-gemspec :name => "chronatog"
+#Wish we could call gemspec here, but if we do, deploy fails with "You have modified your Gemfile in development but did not check"
+gem 'activerecord'
+gem 'haml'
+gem 'sinatra'
+gem 'ey_services_api'
+gem 'ey_api_hmac'
 
 gem 'pg' #Database for production
 

@@ -1,13 +1,3 @@
-PATH
-  remote: .
-  specs:
-    chronatog (0.0.0)
-      activerecord
-      ey_api_hmac
-      ey_services_api
-      haml
-      sinatra
-
 GEM
   remote: http://rubygems.org/
   specs:
@@ -99,12 +89,16 @@ PLATFORMS
 
 DEPENDENCIES
   RedCloth
+  activerecord
   capybara
-  chronatog!
   colored
+  ey_api_hmac
+  ey_services_api
   ey_services_fake
   guard-rspec
+  haml
   pg
   rake
   rspec
+  sinatra
   sqlite3
