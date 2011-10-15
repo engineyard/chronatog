@@ -44,11 +44,13 @@ module Chronatog
         end
 
         delete "/customers/:customer_id" do |customer_id|
+#{customer_cancellation{
           customer = Chronatog::Server::Customer.find(customer_id)
           customer.bill!
           customer.destroy
           content_type :json
           {}.to_json
+#}customer_cancellation}
         end
 
         post "/customers/:customer_id/schedulers" do |customer_id|
@@ -60,7 +62,8 @@ module Chronatog
           create_params = {
             :environment_name => provisioned_service.environment.name,
             :app_name => provisioned_service.app.name,
-            :messages_url => provisioned_service.messages_url
+            :messages_url => provisioned_service.messages_url,
+            :usage_calls => 0
           }
           scheduler = customer.schedulers.create!(create_params)
 #}service_provisioning}

@@ -37,7 +37,12 @@ class EyIntegrationTestHelper
 
   def setup(auth_id, auth_key, tresfiestas_url, tresfiestas_rackapp)
     Chronatog::EyIntegration.save_creds(auth_id, auth_key)
-    Chronatog::EyIntegration.connection.backend = tresfiestas_rackapp
+    Chronatog::EyIntegration.connection.backend = Rack::Builder.new do
+      use DocHelper::RequestLogger
+      map "#{tresfiestas_url}/" do
+        run tresfiestas_rackapp
+      end
+    end
   end
 
 end
@@ -56,5 +61,10 @@ RSpec.configure do |config|
   config.before(:each) do
     @test_helper = EyIntegrationTestHelper.new
     Capybara.app = @test_helper.app
+  end
+  config.after(:each) do
+    unless DocHelper::RequestLogger.request_recordians.empty?
+      raise "Missed: " + DocHelper::RequestLogger.request_recordians.inspect
+    end
   end
 end

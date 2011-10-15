@@ -32,9 +32,8 @@ describe "setup" do
       Chronatog::EyIntegration.service.should_not be_nil
     end
 
-    it "can be de-registered" do
-      pending
-    end
+    it "can be deregistered"
+
   end
 
 end

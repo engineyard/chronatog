@@ -96,6 +96,35 @@ describe "customers" do
         @mock_backend.destroy_service_account
         Chronatog::Server::Customer.count.should eq 0
       end
+
+      describe "with some usage" do
+        before do
+          @mock_backend.provisioned_service
+          @customer = Chronatog::Server::Customer.last
+          @customer.plan_type = "awesome"
+          @customer.created_at = (@customer.created_at - 1.day)
+          @customer.save!
+          scheduler = @customer.schedulers.first
+          scheduler.usage_calls = 5
+          scheduler.save!
+        end
+
+        it "can send a bill" do
+#{bill_all_call{
+          Chronatog::Server::Customer.all.each(&:bill!)
+#}bill_all_call}
+        end
+
+        it "sends a bill on delete" do
+          DocHelper::RequestLogger.record_next_request('service_account_delete_url')
+          DocHelper::RequestLogger.record_next_request('final_bill_url', 'final_bill_params')
+          @mock_backend.destroy_service_account
+          DocHelper.snippets['final_bill_url'].should eq @customer.invoices_url.inspect
+          lambda{ @customer.reload }.should raise_error(ActiveRecord::RecordNotFound)
+        end
+
+      end
+
     end
 
   end

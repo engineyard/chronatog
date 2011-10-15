@@ -53,10 +53,10 @@ To register your service, you make a POST request to the registration url, passi
 Example:
 
 bc.. $ script/console
-> registration_url = "http://services.engineyard.com/api/1/partners/10/services"
+> registration_url = "http://services.engineyard.com/api/1/partners/11/services"
 > chronatog_url = "https://chronatog.engineyard.com"
 > registered_service = Chronatog::EyIntegration.register_service(registration_url, chronatog_url)
-=> #<struct Chronatog::EyIntegration::Service url="http://services.engineyard.com/api/1/partners/10/services/9">
+=> #<struct Chronatog::EyIntegration::Service url="http://services.engineyard.com/api/1/partners/11/services/10">
 
 p. Behind the scene, Chronatog is calling @register_service@ on a @EY::ServicesAPI::Connection@.  The first parameter is the @registration_url@. The second parameter is a hash describing the service being registered.
 
@@ -64,11 +64,11 @@ In the case of this example it looks something like:
 
 bc.. {
   :vars                     => ["CHRONOS_AUTH_USERNAME", "CHRONOS_AUTH_PASSWORD", "CHRONOS_SERVICE_URL"],
+  :description              => "Web cron as a service.", 
   :home_url                 => "https://chronatog.engineyard.com/", 
   :service_accounts_url     => "https://chronatog.engineyard.com/eyintegration/api/1/customers", 
   :terms_and_conditions_url => "https://chronatog.engineyard.com/terms", 
-  :name                     => "Chronatog", 
-  :description              => "Web cron as a service."
+  :name                     => "Chronatog"
 } 
 
 h3. Viewing your service on cloud.engineyard.com
@@ -100,9 +100,9 @@ The request will look something like this:
 bc.. POST "https://chronatog.engineyard.com/eyintegration/api/1/customers"
 {
   "name": "some-account", 
-  "invoices_url": "http://services.engineyard.com/api/1/partners/7/services/7/service_accounts/7/invoices", 
-  "url": "http://services.engineyard.com/api/1/partners/7/services/7/service_accounts/7", 
-  "messages_url": "http://services.engineyard.com/api/1/partners/7/services/7/service_accounts/7/messages"
+  "invoices_url": "http://services.engineyard.com/api/1/partners/9/services/9/service_accounts/9/invoices", 
+  "url": "http://services.engineyard.com/api/1/partners/9/services/9/service_accounts/9", 
+  "messages_url": "http://services.engineyard.com/api/1/partners/9/services/9/service_accounts/9/messages"
 }
 
 p. Chronatog will handle the callback with the implementation defined in the API controller:
@@ -119,7 +119,7 @@ customer = Chronatog::Server::Customer.create!(create_params)
 
 p. As part of handling the callback, a @Customer@ will be created:
 
-bc.. #<Chronatog::Server::Customer id: 1, service_id: nil, name: "some-account", created_at: "2011-10-07 15:54:41", updated_at: "2011-10-07 15:54:41", api_url: "http://services.engineyard.com/api/1/partners/0/ser...", messages_url: "http://services.engineyard.com/api/1/partners/0/ser...", invoices_url: "http://services.engineyard.com/api/1/partners/0/ser...", plan_type: "freemium", last_billed_at: nil>
+bc.. #<Chronatog::Server::Customer id: 1, service_id: nil, name: "some-account", created_at: "2011-10-14 18:20:23", updated_at: "2011-10-14 18:20:23", api_url: "http://services.engineyard.com/api/1/partners/0/ser...", messages_url: "http://services.engineyard.com/api/1/partners/0/ser...", invoices_url: "http://services.engineyard.com/api/1/partners/0/ser...", plan_type: "freemium", last_billed_at: nil>
 
 p. Chronatog returns a JSON response that tells EngineYard some information about the customer.
 
@@ -166,7 +166,7 @@ bc.. "https://chronatog.engineyard.com/eyintegration/sso/customers/1"
 
 p. When EY signs the url it provides additional parameters, such that it looks like this:
 
-bc.. "https://chronatog.engineyard.com/eyintegration/sso/customers/1?access_level=owner&ey_return_to_url=https%3A%2F%2Fcloud.engineyard.com%2Fdashboard&ey_user_id=123&ey_user_name=Person+Name&timestamp=2011-10-07T15%3A54%3A42-07%3A00&signature=AuthHMAC+123edf%3Apk6s7g6lADF1YSenJiy8pXJgSgw%3D"
+bc.. "https://chronatog.engineyard.com/eyintegration/sso/customers/1?access_level=owner&ey_return_to_url=https%3A%2F%2Fcloud.engineyard.com%2Fdashboard&ey_user_id=123&ey_user_name=Person+Name&timestamp=2011-10-14T18%3A20%3A24-07%3A00&signature=AuthHMAC+123edf%3AWr9EnXJr6mYsng2bglQFZCzLx%2B4%3D"
 
 p. Chronatog will verify the SSO request with a before filter that looks like this:
 
@@ -198,15 +198,15 @@ bc.. POST "https://chronatog.engineyard.com/eyintegration/api/1/customers/1/sche
 {
   "app": {
     "name": "myapp", 
-    "id": 1
+    "id": 3
   }, 
-  "url": "http://services.engineyard.com/api/1/service_accounts/9/provisioned_service/1", 
+  "url": "http://services.engineyard.com/api/1/service_accounts/11/provisioned_service/3", 
+  "messages_url": "http://services.engineyard.com/api/1/partners/13/services/12/service_accounts/11/provisioned_service/3/messages", 
   "environment": {
     "name": "myenv", 
     "framework_env": "production", 
-    "id": 1
-  }, 
-  "messages_url": "http://services.engineyard.com/api/1/partners/12/services/11/service_accounts/9/provisioned_service/1/messages"
+    "id": 3
+  }
 }
 
 p. Chronatog will handle the callback with the implementation defined in the API controller:
@@ -218,13 +218,14 @@ customer = Chronatog::Server::Customer.find(customer_id)
 create_params = {
   :environment_name => provisioned_service.environment.name,
   :app_name => provisioned_service.app.name,
-  :messages_url => provisioned_service.messages_url
+  :messages_url => provisioned_service.messages_url,
+  :usage_calls => 0
 }
 scheduler = customer.schedulers.create!(create_params)
 
 p. As part of handling the callback, a @Customer@ will be created:
 
-bc.. #<Chronatog::Server::Scheduler id: 1, customer_id: 1, auth_username: "acde0341715fb5", auth_password: "f920f21f0839804729d10a7405", created_at: "2011-10-07 15:54:42", updated_at: "2011-10-07 15:54:42", environment_name: "myenv", app_name: "myapp", messages_url: "http://services.engineyard.com/api/1/partners/11/se...", decomissioned_at: nil, last_billed_at: nil>
+bc.. #<Chronatog::Server::Scheduler id: 1, customer_id: 1, auth_username: "d56c247857eedd", auth_password: "d1c43a70934ad5e1c7bc9e80c8", created_at: "2011-10-14 18:20:24", updated_at: "2011-10-14 18:20:24", environment_name: "myenv", app_name: "myapp", messages_url: "http://services.engineyard.com/api/1/partners/12/se...", decomissioned_at: nil, usage_calls: 0>
 
 p. Chronatog returns a JSON response that tells EngineYard some information about the created scheduler.
 
@@ -253,9 +254,9 @@ What the response JSON looks like:
 bc.. {
   "provisioned_service": {
     "vars": {
-      "CHRONOS_AUTH_USERNAME": "fd12cbc03357cb", 
+      "CHRONOS_AUTH_USERNAME": "5d533ad3dc4223", 
       "CHRONOS_SERVICE_URL": "https://chronatog.engineyard.com/chronatogapi/1/jobs", 
-      "CHRONOS_AUTH_PASSWORD": "ca55f55705ac0abe9ffd97cdde"
+      "CHRONOS_AUTH_PASSWORD": "a639b1bd5ac762f8a9d5ebe556"
     }, 
     "url": "https://chronatog.engineyard.com/eyintegration/api/1/customers/1/schedulers/1", 
     "configuration_url": null, 
@@ -268,9 +269,85 @@ bc.. {
   }
 }
 
-h3. More
+h3. Disabling the Chronatog Service
 
-TODO: disabling service makes a callback, and Chronatog responds by sending a bill.
+As amazing as our Chronatog web service is, we still need to support user's deciding they don't need it anymore and disabling it.
+
+When the service is disabled, EngineYard will make a DELETE call to the @url@ provided when the service account was first created.
+
+The request will look something like this:
+
+bc.. DELETE "https://chronatog.engineyard.com/eyintegration/api/1/customers/1"
+
+p. Chronatog will handle that request with the implementation defined in the API controller:
+
+bc.. customer = Chronatog::Server::Customer.find(customer_id)
+customer.bill!
+customer.destroy
+content_type :json
+{}.to_json
+
+p. Notice the call to @customer.bill!@. This causes Chronatog to send a final bill for services before destroying the customer. The request sent looks something like this:
+
+bc.. POST "http://services.engineyard.com/api/1/partners/9/services/9/service_accounts/9/invoices"
+{
+  "invoice": {
+    "total_amount_cents": 27, 
+    "line_item_description": "For service from 2011/10/13 to 2011/10/14 includes 1 schedulers and 5 jobs run."
+  }
+}
+
+h3. Billing
+
+Hopefully, normally, customers will use the Chronatog service for a long period of time before canceling. So we need a way to charge them periodically as well.
+
+The mechanism for this is currently a manual process run once a month via script/console.
+
+Simply run:
+
+bc.. $ script/console
+> Chronatog::Server::Customer.all.each(&:bill!)
+
+p. This, of course, will call @bill!@ on all customers, which calculates charges and sends an invoice to the @invoices_url@ for each customer.
+
+The implementation as defined in @Chronatog::EyIntegration::CustomerExtensions@ calculates the total amount owed based on the last time billing was run for each customer (@last_billed_at@ or @created_at@).  It then sends an invoice to the @invoices_url@ and sets the @last_billed_at@ to now.
+
+bc.. def bill!
+  #don't bill free customers
+  return if plan_type == "freemium"
+
+  self.last_billed_at ||= created_at
+  billing_at = Time.now
+  #having the awesome service active costs $0.02 per day
+  total_price = 2 * (billing_at.to_i - last_billed_at.to_i) / 60 / 60 / 24
+
+  total_jobs_ran = 0
+  schedulers.each do |schedule|
+    #add $0.05 for every time we called a job
+    usage_price = 5 * schedule.usage_calls
+    total_jobs_ran += schedule.usage_calls
+    schedule.usage_calls = 0
+    schedule.save
+    total_price += usage_price
+  end
+  if total_price > 0
+    line_item_description = [
+      "For service from #{last_billed_at.strftime('%Y/%m/%d')}",
+      "to #{billing_at.strftime('%Y/%m/%d')}",
+      "includes #{schedulers.size} schedulers", 
+      "and #{total_jobs_ran} jobs run.",
+    ].join(" ")
+
+    invoice = EY::ServicesAPI::Invoice.new(:total_amount_cents => total_price,
+                                           :line_item_description => line_item_description)
+    Chronatog::EyIntegration.connection.send_invoice(self.invoices_url, invoice)
+
+    self.last_billed_at = billing_at
+    save!
+  end
+end
+
+h3. More
 
 TODO: provisioned service SSO.
 

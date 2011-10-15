@@ -160,9 +160,43 @@ What the response JSON looks like:
 
 bc.. <%= service_provisioning_response_json %>
 
-h3. More
+h3. Disabling the Chronatog Service
 
-TODO: disabling service makes a callback, and Chronatog responds by sending a bill.
+As amazing as our Chronatog web service is, we still need to support user's deciding they don't need it anymore and disabling it.
+
+When the service is disabled, EngineYard will make a DELETE call to the @url@ provided when the service account was first created.
+
+The request will look something like this:
+
+bc.. DELETE <%= service_account_delete_url %>
+
+p. Chronatog will handle that request with the implementation defined in the API controller:
+
+bc.. <%= customer_cancellation %>
+
+p. Notice the call to @customer.bill!@. This causes Chronatog to send a final bill for services before destroying the customer. The request sent looks something like this:
+
+bc.. POST <%= final_bill_url %>
+<%= final_bill_params %>
+
+h3. Billing
+
+Hopefully, normally, customers will use the Chronatog service for a long period of time before canceling. So we need a way to charge them periodically as well.
+
+The mechanism for this is currently a manual process run once a month via script/console.
+
+Simply run:
+
+bc.. $ script/console
+> <%= bill_all_call %>
+
+p. This, of course, will call @bill!@ on all customers, which calculates charges and sends an invoice to the @invoices_url@ for each customer.
+
+The implementation as defined in @Chronatog::EyIntegration::CustomerExtensions@ calculates the total amount owed based on the last time billing was run for each customer (@last_billed_at@ or @created_at@).  It then sends an invoice to the @invoices_url@ and sets the @last_billed_at@ to now.
+
+bc.. <%= customer_billing %>
+
+h3. More
 
 TODO: provisioned service SSO.
 

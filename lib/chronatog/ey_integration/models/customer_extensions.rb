@@ -19,46 +19,42 @@ module Chronatog
         plans.detect{|plan| plan[0] == plan_type }[1]
       end
 
-      def create_scheduled_job(job)
-        Scheduler.add(self, env_name, job)
-      end
-
+#{customer_billing{
       def bill!
+        #don't bill free customers
+        return if plan_type == "freemium"
+
         self.last_billed_at ||= created_at
         billing_at = Time.now
-        #this service costs $0.01 per minute
-        total_price = 1 * (billing_at.to_i - last_billed_at.to_i) / 60
+        #having the awesome service active costs $0.02 per day
+        total_price = 2 * (billing_at.to_i - last_billed_at.to_i) / 60 / 60 / 24
 
-        puts "total_price so far #{total_price}"
-
+        total_jobs_ran = 0
         schedulers.each do |schedule|
-          usage_seconds = schedule.get_billable_usage!(billing_at)
-          puts "#{usage_seconds} usage for #{schedule.inspect}"
-          #schedulers costs $0.02 per second
-          usage_price = usage_seconds * 2
+          #add $0.05 for every time we called a job
+          usage_price = 5 * schedule.usage_calls
+          total_jobs_ran += schedule.usage_calls
+          schedule.usage_calls = 0
+          schedule.save
           total_price += usage_price
-
-          puts "total_price so far #{total_price}"
         end
         if total_price > 0
-          line_item_description = "For service from #{last_billed_at} to #{billing_at}, "+
-                                  "includes #{schedulers.size} schedulers."
+          line_item_description = [
+            "For service from #{last_billed_at.strftime('%Y/%m/%d')}",
+            "to #{billing_at.strftime('%Y/%m/%d')}",
+            "includes #{schedulers.size} schedulers", 
+            "and #{total_jobs_ran} jobs run.",
+          ].join(" ")
 
-          invoice = EY::ServicesAPI::Invoice.new(
-          :total_amount_cents => total_price,
-          :line_item_description => line_item_description)
-          Chronatog.connection.send_invoice(invoices_url, invoice)
+          invoice = EY::ServicesAPI::Invoice.new(:total_amount_cents => total_price,
+                                                 :line_item_description => line_item_description)
+          Chronatog::EyIntegration.connection.send_invoice(self.invoices_url, invoice)
 
           self.last_billed_at = billing_at
           save!
-
-          #return info about charges made
-          [total_price, line_item_description]
-        else
-          #return no charge made
-          nil
         end
       end
+#}customer_billing}
 
     end
   end

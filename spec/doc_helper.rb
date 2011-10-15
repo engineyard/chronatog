@@ -1,7 +1,7 @@
 class DocHelper
 
   class RequestLogger
-    def self.record_next_request(url_key, params_key, response_json_key = nil)
+    def self.record_next_request(url_key = nil, params_key = nil, response_json_key = nil)
       request_recordians << [url_key, params_key, response_json_key]
     end
     def self.request_recordians
@@ -10,13 +10,17 @@ class DocHelper
 
     def initialize(app) @app = app end
     def call(env)
-      url_key, params_key, response_json_key = RequestLogger.request_recordians.pop
+      url_key, params_key, response_json_key = RequestLogger.request_recordians.shift
       if url_key
         request = Rack::Request.new(env)
         DocHelper.save(url_key, request.url)
       end
       if params_key
-        DocHelper.save(params_key, JSON::parse(env["rack.input"].string), :json)
+        begin
+          DocHelper.save(params_key, JSON::parse(env["rack.input"].string), :json)
+        rescue JSON::ParserError => e
+          DocHelper.save(params_key, env["rack.input"].string)
+        end
       end
       tuple = @app.call(env)
       if response_json_key

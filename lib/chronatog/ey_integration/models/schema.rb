@@ -18,7 +18,7 @@ module Chronatog
           conn.add_column "schedulers", "app_name",         :string
           conn.add_column "schedulers", "messages_url",     :string
           conn.add_column "schedulers", "decomissioned_at", :datetime
-          conn.add_column "schedulers", "last_billed_at",   :datetime
+          conn.add_column "schedulers", "usage_calls",      :integer
 
         end
       end
