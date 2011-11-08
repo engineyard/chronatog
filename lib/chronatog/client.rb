@@ -4,11 +4,46 @@ module Chronatog
   module Client
 
     def self.setup!(service_url, auth_username, auth_password)
-      @connection = Connection.new(service_url, auth_username, auth_password)
+      if service_url == "in-memory"
+        @connection = Fake.new
+      else
+        @connection = Connection.new(service_url, auth_username, auth_password)
+      end
     end
 
     def self.connection
       @connection or raise "connection not setup! yet"
+    end
+
+    class Fake
+      def create_job(callback_url, schedule)
+        job_url = "/jobs/#{Object.new.object_id}"
+        created = {'callback_url' => callback_url, 'schedule' => schedule, 'url' => job_url }
+        jobs[job_url] = created
+        JSON::parse(created.to_json)
+      end
+
+      def destroy_job(job_url)
+        jobs.delete(job_url)
+      end
+
+      def list_jobs
+        JSON::parse(jobs.values.to_json)
+      end
+
+      def get_job(job_url)
+        JSON::parse(jobs[job_url].to_json)
+      end
+
+    private
+
+      def jobs
+        self.class.jobs
+      end
+      def self.jobs
+        @jobs ||= {}
+      end
+
     end
 
     class Connection
@@ -64,7 +99,7 @@ module Chronatog
 
       def client
         #need to set vars in scope here because Rack::Client.new instance_evals
-        bak = @backend
+        bak = backend
         creds = @creds
         @client ||= Rack::Client.new do
           use BasicAuth, creds

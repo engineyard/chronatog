@@ -15,4 +15,5 @@ Gem::Specification.new do |s|
   s.require_paths = ["lib"]
 
   s.add_dependency 'rack-client'
+  #JSON is an implicit dependency
 end
