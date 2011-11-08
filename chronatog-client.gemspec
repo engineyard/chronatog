@@ -3,7 +3,7 @@ $:.push File.expand_path("../lib", __FILE__)
 require "chronatog/client/version"
 
 Gem::Specification.new do |s|
-  s.name        = "chronatog"
+  s.name        = "chronatog-client"
   s.version     = Chronatog::Client::VERSION
   s.authors     = ["Jacob Burkhart & Josh Lane & Others"]
   s.email       = ["jacob@engineyard.com"]
