@@ -1,3 +1,4 @@
+*.gem
 .DS_Store
 tmp
 config/ey_registered_service.yml
