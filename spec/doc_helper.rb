@@ -70,7 +70,7 @@ class DocHelper
       end.compact.reverse.join("\n")
       if format == :json
         string.gsub!(/[ ]*\=\>/, ":")
-        string.gsub!("nil,","null,")
+        string.gsub!(": nil",": null")
       end
     end
     snippets[key] = string

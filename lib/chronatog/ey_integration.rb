@@ -35,6 +35,7 @@ module Chronatog
     def self.service_registration_params(base_url)
       {
         :name => "Chronatog",
+        :label => "chronatog",
         :description => "Web cron as a service.",
         :service_accounts_url =>     "#{base_url + API_PATH_PREFIX}/customers",
         :home_url =>                 "#{base_url}/",
@@ -139,7 +140,7 @@ module Chronatog
       def self.write!(url)
         service = Service.new(url)
         File.open(CONFIG_PATH, "w") do |fp|
-          fp.write({:url => service.url})
+          fp.write({:url => service.url}.to_yaml)
         end
         service
       end
