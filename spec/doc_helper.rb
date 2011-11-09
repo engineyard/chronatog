@@ -63,8 +63,11 @@ class DocHelper
       prev = ""
       string = string.split("\n").reverse.map do |line|
         if line.match(/\=\>/)
-          line + prev
+          prev_was = prev
+          prev = ""
+          line + prev_was
         elsif line.match(/^\{|\}/)
+          prev = ""
           line
         else
           prev = (line + prev).strip

@@ -40,7 +40,7 @@ module Chronatog
         :service_accounts_url =>     "#{base_url + API_PATH_PREFIX}/customers",
         :home_url =>                 "#{base_url}/",
         :terms_and_conditions_url => "#{base_url}/terms",
-        :vars => ["CHRONOS_AUTH_USERNAME", "CHRONOS_AUTH_PASSWORD", "CHRONOS_SERVICE_URL"]
+        :vars => ["service_url", "auth_username", "auth_password"]
       }
     end
 

@@ -71,9 +71,9 @@ module Chronatog
           response_params = {
             :configuration_required => false,
             :vars     => {
-              "CHRONOS_AUTH_USERNAME" => scheduler.auth_username,
-              "CHRONOS_AUTH_PASSWORD" => scheduler.auth_password,
-              "CHRONOS_SERVICE_URL"   => "#{true_base_url}/chronatogapi/1/jobs",
+              "service_url"   => "#{true_base_url}/chronatogapi/1/jobs",
+              "auth_username" => scheduler.auth_username,
+              "auth_password" => scheduler.auth_password,
             },
             :url      => "#{api_base_url}/customers/#{customer.id}/schedulers/#{scheduler.id}",
             :message  => EY::ServicesAPI::Message.new(:message_type => "status", 
