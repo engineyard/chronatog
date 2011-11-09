@@ -1,5 +1,4 @@
 require 'chronatog/ey_integration'
-require File.join( File.dirname(__FILE__), "../doc_helper" )
 
 class HasADashboardAWSM < Sinatra::Base
   enable :raise_errors

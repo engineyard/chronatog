@@ -1,4 +1,4 @@
-require File.join( File.dirname(__FILE__), "spec_helper" )
+require File.join( File.dirname(__FILE__), "../spec_helper" )
 
 describe "customers" do
   include_context "ey integration reset"
@@ -119,7 +119,7 @@ describe "customers" do
           DocHelper::RequestLogger.record_next_request('service_account_delete_url')
           DocHelper::RequestLogger.record_next_request('final_bill_url', 'final_bill_params')
           @mock_backend.destroy_service_account
-          DocHelper.snippets['final_bill_url'].should eq @customer.invoices_url.inspect
+          DocHelper.snippets['final_bill_url'].should eq @customer.invoices_url
           lambda{ @customer.reload }.should raise_error(ActiveRecord::RecordNotFound)
         end
 

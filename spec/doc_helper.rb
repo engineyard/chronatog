@@ -34,6 +34,9 @@ class DocHelper
 
   def self.save(key, obj, format = :ruby)
     string = obj.inspect
+    if obj.is_a?(String)
+      string = obj
+    end
     if obj.is_a?(Hash)
       string.gsub!(", \"", ", \n\"")
       string.gsub!(", :", ", \n:")

@@ -160,6 +160,32 @@ What the response JSON looks like:
 
 bc.. <%= service_provisioning_response_json %>
 
+h3. Using the provisioned Chronatog service in your app
+
+The Chronatog service has been enabled and provisioned. Values for @service_url@, @auth_username@, and @auth_password@ have been generated and sent back to EngineYard.  Now it's time to make use of the service in your  application.  Just check-in few changes to your app and deploy!
+
+The public client gem for the Chronatog API is called @chronatog-client@. Add it to your Gemfile like this:
+
+bc.. gem 'chronatog-client', :require => 'chronatog/client'
+
+p. To initialize the Chronatog client with the provisioned configs, you'll also need another gem, @ey_config@:
+
+bc.. gem 'ey_config'
+
+p. With these 2 gems installed, setting up Chronatog can be done like so:
+
+bc.. <%= chronatog_setup_from_ey_config %>
+
+p. @EY::Config@ works by reading the contents of @config/ey_services_config_local.yml@ or @config/ey_services_config_deploy.yml@. In order to develop with a fake version of the Chronatog API locally, you can create @config/ey_services_config_local.yml@ with the contents:
+
+bc.. <%= ey_services_config_local_yaml_contents %>
+
+p. When you deploy, EngineYard will create @config/ey_services_config_deploy.yml@.  It might look something like this:
+
+bc.. <%= ey_services_config_deploy_yaml_example %>
+
+p. The existence of @config/ey_services_config_deploy.yml@ will override all settings in @config/ey_services_config_local.yml@.
+
 h3. Disabling the Chronatog Service
 
 As amazing as our Chronatog web service is, we still need to support user's deciding they don't need it anymore and disabling it.

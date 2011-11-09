@@ -20,6 +20,7 @@ group :test, :development do
   gem 'sqlite3' #Database for tests
   gem 'rspec'
   gem 'capybara'
+  gem 'ey_config'
 
   gem 'rake'
 end

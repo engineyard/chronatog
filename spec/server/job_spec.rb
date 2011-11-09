@@ -1,4 +1,4 @@
-require File.join( File.dirname(__FILE__), "spec_helper" )
+require File.join( File.dirname(__FILE__), "../spec_helper" )
 
 describe "creating a job" do
   include_context "chronatog server reset"
@@ -7,7 +7,17 @@ describe "creating a job" do
     before do
       @customer = Chronatog::Server::Customer.create!(:name => "some-customer")
       scheduler = @customer.schedulers.create!
-      @client = Chronatog::Client.setup!("http://chronatog.local/chronatogapi/1/jobs", scheduler.auth_username, scheduler.auth_password)
+      config = {
+        "chronatog" => {
+          "service_url" => "https://chronatog.engineyard.com/chronatogapi/1/jobs",
+          "auth_username" => scheduler.auth_username,
+          "auth_password" => scheduler.auth_password,
+        }
+      }
+      DocHelper.save('ey_services_config_deploy_yaml_example', config.to_yaml)
+      @client = Chronatog::Client.setup!(config["chronatog"]["service_url"],
+                                         config["chronatog"]["auth_username"],
+                                         config["chronatog"]["auth_password"])
     end
 
     describe "client mocked to talk to in-mem rack server" do

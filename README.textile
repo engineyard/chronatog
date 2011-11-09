@@ -53,7 +53,7 @@ To register your service, you make a POST request to the registration url, passi
 Example:
 
 bc.. $ script/console
-> registration_url = "http://services.engineyard.com/api/1/partners/11/services"
+> registration_url = http://services.engineyard.com/api/1/partners/11/services
 > chronatog_url = "https://chronatog.engineyard.com"
 > registered_service = Chronatog::EyIntegration.register_service(registration_url, chronatog_url)
 => #<struct Chronatog::EyIntegration::Service url="http://services.engineyard.com/api/1/partners/11/services/10">
@@ -98,7 +98,7 @@ When you click 'enable', EngineYard will make a call to your @service_accounts_u
 
 The request will look something like this:
 
-bc.. POST "https://chronatog.engineyard.com/eyintegration/api/1/customers"
+bc.. POST https://chronatog.engineyard.com/eyintegration/api/1/customers
 {
   "name": "some-account", 
   "url": "http://services.engineyard.com/api/1/partners/9/services/9/service_accounts/9", 
@@ -120,7 +120,7 @@ customer = Chronatog::Server::Customer.create!(create_params)
 
 p. As part of handling the callback, a @Customer@ will be created:
 
-bc.. #<Chronatog::Server::Customer id: 1, service_id: nil, name: "some-account", created_at: "2011-11-08 12:36:03", updated_at: "2011-11-08 12:36:03", api_url: "http://services.engineyard.com/api/1/partners/0/ser...", messages_url: "http://services.engineyard.com/api/1/partners/0/ser...", invoices_url: "http://services.engineyard.com/api/1/partners/0/ser...", plan_type: "freemium", last_billed_at: nil>
+bc.. #<Chronatog::Server::Customer id: 1, service_id: nil, name: "some-account", created_at: "2011-11-08 17:09:55", updated_at: "2011-11-08 17:09:55", api_url: "http://services.engineyard.com/api/1/partners/0/ser...", messages_url: "http://services.engineyard.com/api/1/partners/0/ser...", invoices_url: "http://services.engineyard.com/api/1/partners/0/ser...", plan_type: "freemium", last_billed_at: nil>
 
 p. Chronatog returns a JSON response that tells EngineYard some information about the customer.
 
@@ -163,11 +163,11 @@ With the service enabled, a "Visit" link should appear.  Following this link wil
 
 The configuration url provided by Chronatog in this example was:
 
-bc.. "https://chronatog.engineyard.com/eyintegration/sso/customers/1"
+bc.. https://chronatog.engineyard.com/eyintegration/sso/customers/1
 
 p. When EY signs the url it provides additional parameters, such that it looks like this:
 
-bc.. "https://chronatog.engineyard.com/eyintegration/sso/customers/1?access_level=owner&ey_return_to_url=https%3A%2F%2Fcloud.engineyard.com%2Fdashboard&ey_user_id=123&ey_user_name=Person+Name&timestamp=2011-11-08T12%3A36%3A04-08%3A00&signature=AuthHMAC+123edf%3A%2F0veHluU562iYzLv7zgbsPWmQiM%3D"
+bc.. https://chronatog.engineyard.com/eyintegration/sso/customers/1?access_level=owner&ey_return_to_url=https%3A%2F%2Fcloud.engineyard.com%2Fdashboard&ey_user_id=123&ey_user_name=Person+Name&timestamp=2011-11-08T17%3A09%3A56-08%3A00&signature=AuthHMAC+123edf%3AOZ2BP9sKYEP0Z9rlQI3bEnId5oQ%3D
 
 p. Chronatog will verify the SSO request with a before filter that looks like this:
 
@@ -195,7 +195,7 @@ Clicking "Provision" will cause EngineYard to call to your @provisioned_services
 
 The request will look something like this:
 
-bc.. POST "https://chronatog.engineyard.com/eyintegration/api/1/customers/1/schedulers"
+bc.. POST https://chronatog.engineyard.com/eyintegration/api/1/customers/1/schedulers
 {
   "url": "http://services.engineyard.com/api/1/service_accounts/11/provisioned_service/3", 
   "messages_url": "http://services.engineyard.com/api/1/partners/13/services/12/service_accounts/11/provisioned_service/3/messages", 
@@ -226,7 +226,7 @@ scheduler = customer.schedulers.create!(create_params)
 
 p. As part of handling the callback, a @Customer@ will be created:
 
-bc.. #<Chronatog::Server::Scheduler id: 1, customer_id: 1, auth_username: "U14ca89086f1f36", auth_password: "P5217b147cb186da77a4b4b2f8d", created_at: "2011-11-08 12:36:04", updated_at: "2011-11-08 12:36:04", environment_name: "myenv", app_name: "myapp", messages_url: "http://services.engineyard.com/api/1/partners/12/se...", decomissioned_at: nil, usage_calls: 0>
+bc.. #<Chronatog::Server::Scheduler id: 1, customer_id: 1, auth_username: "U990ba7244d3944", auth_password: "Pcd46202778d9af5a23bfc57e72", created_at: "2011-11-08 17:09:56", updated_at: "2011-11-08 17:09:56", environment_name: "myenv", app_name: "myapp", messages_url: "http://services.engineyard.com/api/1/partners/12/se...", decomissioned_at: nil, usage_calls: 0>
 
 p. Chronatog returns a JSON response that tells EngineYard some information about the created scheduler.
 
@@ -258,8 +258,8 @@ bc.. {
     "configuration_required": false, 
     "configuration_url": null, 
     "vars": {
-      "CHRONOS_AUTH_USERNAME": "Udfb6cfc04b9b94", 
-      "CHRONOS_AUTH_PASSWORD": "Pc78dcbd53ee18aed6c4e602dbc", 
+      "CHRONOS_AUTH_USERNAME": "Ue1b6025941a6ca", 
+      "CHRONOS_AUTH_PASSWORD": "Pb780e2fc20a8a39b907cc1fe30", 
       "CHRONOS_SERVICE_URL": "https://chronatog.engineyard.com/chronatogapi/1/jobs"
     }
   }, 
@@ -270,6 +270,44 @@ bc.. {
   }
 }
 
+h3. Using the provisioned Chronatog service in your app
+
+The Chronatog service has been enabled and provisioned. Values for @service_url@, @auth_username@, and @auth_password@ have been generated and sent back to EngineYard.  Now it's time to make use of the service in your  application.  Just check-in few changes to your app and deploy!
+
+The public client gem for the Chronatog API is called @chronatog-client@. Add it to your Gemfile like this:
+
+bc.. gem 'chronatog-client', :require => 'chronatog/client'
+
+p. To initialize the Chronatog client with the provisioned configs, you'll also need another gem, @ey_config@:
+
+bc.. gem 'ey_config'
+
+p. With these 2 gems installed, setting up Chronatog can be done like so:
+
+bc.. @client = Chronatog::Client.setup!(EY::Config.get(:chronatog, 'service_url'), 
+                                   EY::Config.get(:chronatog, 'auth_username'), 
+                                   EY::Config.get(:chronatog, 'auth_password'))
+
+p. @EY::Config@ works by reading the contents of @config/ey_services_config_local.yml@ or @config/ey_services_config_deploy.yml@. In order to develop with a fake version of the Chronatog API locally, you can create @config/ey_services_config_local.yml@ with the contents:
+
+bc.. ---
+chronatog:
+  service_url: in-memory
+  auth_username: 123-ignored
+  auth_password: 456-also-ignored
+
+
+p. When you deploy, EngineYard will create @config/ey_services_config_deploy.yml@.  It might look something like this:
+
+bc.. ---
+chronatog:
+  service_url: https://chronatog.engineyard.com/chronatogapi/1/jobs
+  auth_username: U95ef0d251eb028
+  auth_password: P807f73f6f73fd59a2afe6c1c68
+
+
+p. The existence of @config/ey_services_config_deploy.yml@ will override all settings in @config/ey_services_config_local.yml@.
+
 h3. Disabling the Chronatog Service
 
 As amazing as our Chronatog web service is, we still need to support user's deciding they don't need it anymore and disabling it.
@@ -278,7 +316,7 @@ When the service is disabled, EngineYard will make a DELETE call to the @url@ pr
 
 The request will look something like this:
 
-bc.. DELETE "https://chronatog.engineyard.com/eyintegration/api/1/customers/1"
+bc.. DELETE https://chronatog.engineyard.com/eyintegration/api/1/customers/1
 
 p. Chronatog will handle that request with the implementation defined in the API controller:
 
@@ -290,7 +328,7 @@ content_type :json
 
 p. Notice the call to @customer.bill!@. This causes Chronatog to send a final bill for services before destroying the customer. The request sent looks something like this:
 
-bc.. POST "http://services.engineyard.com/api/1/partners/9/services/9/service_accounts/9/invoices"
+bc.. POST http://services.engineyard.com/api/1/partners/9/services/9/service_accounts/9/invoices
 {
   "invoice": {
     "total_amount_cents": 27, 
