@@ -4,7 +4,7 @@ source 'http://rubygems.org'
 gem 'activerecord'
 gem 'haml'
 gem 'sinatra', :require => 'sinatra/base'
-gem 'ey_services_api'
+gem 'ey_services_api', ">=0.2.0"
 gem 'ey_api_hmac'
 
 gem 'pg' #Database for production
@@ -15,7 +15,7 @@ group :test, :development do
   gem 'colored'
 
   #for tests
-  gem 'ey_services_fake'
+  gem 'ey_services_fake', ">=0.1.0"
   gem 'guard-rspec'
   gem 'sqlite3' #Database for tests
   gem 'rspec'

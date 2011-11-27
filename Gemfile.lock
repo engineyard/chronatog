@@ -33,10 +33,10 @@ GEM
       json
       rack-client
     ey_config (0.0.1)
-    ey_services_api (0.1.3)
+    ey_services_api (0.2.0)
       ey_api_hmac
       json
-    ey_services_fake (0.0.1)
+    ey_services_fake (0.1.0)
       cubbyhole (>= 0.2.0)
       sinatra
     ffi (1.0.9)
@@ -95,8 +95,8 @@ DEPENDENCIES
   colored
   ey_api_hmac
   ey_config
-  ey_services_api
-  ey_services_fake
+  ey_services_api (>= 0.2.0)
+  ey_services_fake (>= 0.1.0)
   guard-rspec
   haml
   pg

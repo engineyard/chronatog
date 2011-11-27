@@ -120,7 +120,7 @@ customer = Chronatog::Server::Customer.create!(create_params)
 
 p. As part of handling the callback, a @Customer@ will be created:
 
-bc.. #<Chronatog::Server::Customer id: 1, service_id: nil, name: "some-account", created_at: "2011-11-09 11:12:54", updated_at: "2011-11-09 11:12:54", api_url: "http://services.engineyard.com/api/1/partners/0/ser...", messages_url: "http://services.engineyard.com/api/1/partners/0/ser...", invoices_url: "http://services.engineyard.com/api/1/partners/0/ser...", plan_type: "freemium", last_billed_at: nil>
+bc.. #<Chronatog::Server::Customer id: 1, service_id: nil, name: "some-account", created_at: "2011-11-26 18:41:12", updated_at: "2011-11-26 18:41:12", api_url: "http://services.engineyard.com/api/1/partners/0/ser...", messages_url: "http://services.engineyard.com/api/1/partners/0/ser...", invoices_url: "http://services.engineyard.com/api/1/partners/0/ser...", plan_type: "freemium", last_billed_at: nil>
 
 p. Chronatog returns a JSON response that tells EngineYard some information about the customer.
 
@@ -167,7 +167,7 @@ bc.. https://chronatog.engineyard.com/eyintegration/sso/customers/1
 
 p. When EY signs the url it provides additional parameters, such that it looks like this:
 
-bc.. https://chronatog.engineyard.com/eyintegration/sso/customers/1?access_level=owner&ey_return_to_url=https%3A%2F%2Fcloud.engineyard.com%2Fdashboard&ey_user_id=123&ey_user_name=Person+Name&timestamp=2011-11-09T11%3A12%3A56-08%3A00&signature=AuthHMAC+123edf%3A0%2F9spogTgwHiWvgawtLN92O7BnE%3D
+bc.. https://chronatog.engineyard.com/eyintegration/sso/customers/1?access_level=owner&ey_return_to_url=https%3A%2F%2Fcloud.engineyard.com%2Fdashboard&ey_user_id=123&ey_user_name=Person+Name&timestamp=2011-11-26T18%3A41%3A13-08%3A00&signature=AuthHMAC+123edf%3AkjyDr8YWFh37wzuYPep0jeI28rk%3D
 
 p. Chronatog will verify the SSO request with a before filter that looks like this:
 
@@ -206,7 +206,8 @@ bc.. POST https://chronatog.engineyard.com/eyintegration/api/1/customers/1/sched
   "environment": {
     "id": 3, 
     "name": "myenv", 
-    "framework_env": "production"
+    "framework_env": "production",
+    "aws_region": "us-east-1"
   }
 }
 
@@ -226,7 +227,7 @@ scheduler = customer.schedulers.create!(create_params)
 
 p. As part of handling the callback, a @Customer@ will be created:
 
-bc.. #<Chronatog::Server::Scheduler id: 1, customer_id: 1, auth_username: "Ue166c7a5c160f9", auth_password: "Pa948f36fd816461ef9a7800235", created_at: "2011-11-09 11:12:56", updated_at: "2011-11-09 11:12:56", environment_name: "myenv", app_name: "myapp", messages_url: "http://services.engineyard.com/api/1/partners/12/se...", decomissioned_at: nil, usage_calls: 0>
+bc.. #<Chronatog::Server::Scheduler id: 1, customer_id: 1, auth_username: "U23c4b72d2a1332", auth_password: "P9c48ca2256db251d9f0a73e80c", created_at: "2011-11-26 18:41:14", updated_at: "2011-11-26 18:41:14", environment_name: "myenv", app_name: "myapp", messages_url: "http://services.engineyard.com/api/1/partners/12/se...", decomissioned_at: nil, usage_calls: 0>
 
 p. Chronatog returns a JSON response that tells EngineYard some information about the created scheduler.
 
@@ -259,8 +260,8 @@ bc.. {
     "configuration_url": null, 
     "vars": {
       "service_url": "https://chronatog.engineyard.com/chronatogapi/1/jobs", 
-      "auth_username": "U8e2343e7d4cffb",
-      "auth_password": "P4d16fb58ca892bed8de5ea41b8"
+      "auth_username": "U93e9b6e2f65cc7",
+      "auth_password": "P64cbfaf114e154cf696d7a25c1"
     }
   }, 
   "message": {
@@ -303,8 +304,8 @@ p. When you deploy, EngineYard will create @config/ey_services_config_deploy.yml
 bc.. ---
 chronatog:
   service_url: https://chronatog.engineyard.com/chronatogapi/1/jobs
-  auth_username: U3c292206caf4e5
-  auth_password: P8481b7f41fa672965d22eeb9be
+  auth_username: Uf373af8eb77a75
+  auth_password: P2f2abf4334efd95fa15a971e8d
 
 
 
@@ -334,7 +335,7 @@ bc.. POST http://services.engineyard.com/api/1/partners/9/services/9/service_acc
 {
   "invoice": {
     "total_amount_cents": 27, 
-    "line_item_description": "For service from 2011/11/08 to 2011/11/09 includes 1 schedulers and 5 jobs run."
+    "line_item_description": "For service from 2011/11/25 to 2011/11/26 includes 1 schedulers and 5 jobs run."
   }
 }
 
