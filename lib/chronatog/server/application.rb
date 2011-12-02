@@ -14,7 +14,7 @@ module Chronatog
       end
 
       get "/terms" do
-        "Agree to our terms, or else..."
+        "Agree to our terms, or we agree with you ;)"
       end
 
       ##################
