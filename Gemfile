@@ -4,8 +4,8 @@ source 'http://rubygems.org'
 gem 'activerecord'
 gem 'haml'
 gem 'sinatra', :require => 'sinatra/base'
-gem 'ey_services_api', ">=0.2.0"
-gem 'ey_api_hmac'
+gem 'ey_services_api', ">=0.3.1"
+gem 'ey_api_hmac', ">=0.1.0"
 
 gem 'pg' #Database for production
 gem 'mysql2', '~> 0.2.13', :group => :production
