@@ -8,6 +8,7 @@ gem 'ey_services_api', ">=0.2.0"
 gem 'ey_api_hmac'
 
 gem 'pg' #Database for production
+gem 'mysql2', '~> 0.2.13', :group => :production
 
 group :test, :development do
   #for documentation generation
