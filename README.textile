@@ -12,7 +12,7 @@ Chronatog is:
 # A gem for use by the internal EngineYard services API implementation, for testing. (chronatog.gemspec)
 # This document designed for helping partners get started with the EY services API. (README.textile)
 
-!https://github.com/engineyard/chronatog/raw/master/images/chronatog.jpg!
+
 
 h2. Getting Started: Deploying your own Chronatog
 
