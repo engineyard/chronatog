@@ -29,17 +29,7 @@ describe "customers" do
           @configuration_url = @service_account[:pushed_service_account][:configuration_url]
           DocHelper.save("service_configuration_url", @configuration_url)
 
-          params = {
-            'timestamp' => Time.now.iso8601,
-            'ey_user_id' => 123,
-            'ey_user_name' => "Person Name",
-            'ey_return_to_url' => "https://cloud.engineyard.com/dashboard",
-            'access_level' => 'owner',
-          }
-          signed_configuration_url = EY::ApiHMAC::SSO.sign(@configuration_url, 
-                                                           params, 
-                                                           @service_account[:service][:partner][:auth_id], 
-                                                           @service_account[:service][:partner][:auth_key])
+          signed_configuration_url = @mock_backend.service_account_sso_url
 
           DocHelper.save("service_configuration_url_signed", signed_configuration_url)
 

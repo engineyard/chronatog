@@ -34,10 +34,10 @@ GEM
       rack-client
       rack-idempotent (>= 0.0.3)
     ey_config (0.0.1)
-    ey_services_api (0.3.6)
+    ey_services_api (0.3.7)
       ey_api_hmac (>= 0.3.0)
       json
-    ey_services_fake (0.3.6)
+    ey_services_fake (0.3.7)
       cubbyhole (>= 0.2.0)
       request_visualizer
       sinatra
@@ -100,8 +100,8 @@ DEPENDENCIES
   colored
   ey_api_hmac (~> 0.4.4)
   ey_config
-  ey_services_api (~> 0.3.6)
-  ey_services_fake (~> 0.3.6)
+  ey_services_api (~> 0.3.7)
+  ey_services_fake (~> 0.3.7)
   guard-rspec
   haml
   pg
