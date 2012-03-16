@@ -1,28 +1,14 @@
 require 'chronatog/ey_integration'
 
-class HasADashboardAWSM < Sinatra::Base
-  enable :raise_errors
-  disable :dump_errors
-  disable :show_exceptions
-
-  get '/dashboard' do
-    "Hello this is fake AWSM dashboard"
-  end
-
-end
-
 class EyIntegrationTestHelper
 
   def app
-    chronatog_base_url = "#{base_url}/"
-    @app ||= Rack::Builder.new do
+    Chronatog::EyIntegration.app
+  end
+
+  def extra_middlewares
+    Proc.new do
       use DocHelper::RequestLogger
-      map chronatog_base_url do
-        run Chronatog::EyIntegration.app
-      end
-      map "https://cloud.engineyard.com/" do
-        run HasADashboardAWSM
-      end
     end
   end
 
@@ -36,12 +22,7 @@ class EyIntegrationTestHelper
 
   def setup(auth_id, auth_key, tresfiestas_url, tresfiestas_rackapp)
     Chronatog::EyIntegration.save_creds(auth_id, auth_key)
-    Chronatog::EyIntegration.connection.backend = Rack::Builder.new do
-      use DocHelper::RequestLogger
-      map "#{tresfiestas_url}/" do
-        run tresfiestas_rackapp
-      end
-    end
+    Chronatog::EyIntegration.connection.backend = tresfiestas_rackapp
   end
 
 end
@@ -50,6 +31,7 @@ shared_context "ey integration reset" do
   before(:each) do
     EY::ServicesAPI.enable_mock!(@test_helper)
     @mock_backend = EY::ServicesAPI.mock_backend
+    Capybara.app = @mock_backend.app
   end
 end
 
@@ -59,7 +41,7 @@ RSpec.configure do |config|
   config.include(Capybara::DSL)
   config.before(:each) do
     @test_helper = EyIntegrationTestHelper.new
-    Capybara.app = @test_helper.app
+    Capybara.app = Chronatog::EyIntegration.app
   end
   config.after(:each) do
     unless DocHelper::RequestLogger.request_recordians.empty?
