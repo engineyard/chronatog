@@ -14,11 +14,20 @@ describe "schedulers" do
         @customer = Chronatog::Server::Customer.first
       end
 
+      it "can provision and update" do
+        DocHelper::RequestLogger.record_next_request('service_provisioning_url',
+                                                     'service_provisioning_params',
+                                                     'service_provisioning_response_json')
+        @mock_backend.provisioned_service
+
+        DocHelper::RequestLogger.record_next_request('provisioned_service_update_url',
+                                                     'provisioned_service_update_params')
+        scheduler = @customer.schedulers.reload.first
+        scheduler.reset_auth!
+      end
+
       describe "when provisioned" do
         before do
-          DocHelper::RequestLogger.record_next_request('service_provisioning_url', 
-                                                       'service_provisioning_params',
-                                                       'service_provisioning_response_json')
           @mock_backend.provisioned_service
         end
 

@@ -14,6 +14,7 @@ module Chronatog
           conn.add_column "customers", "plan_type",      :string
           conn.add_column "customers", "last_billed_at", :datetime
 
+          conn.add_column "schedulers", "api_url",        :string
           conn.add_column "schedulers", "environment_name", :string
           conn.add_column "schedulers", "app_name",         :string
           conn.add_column "schedulers", "messages_url",     :string

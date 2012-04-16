@@ -160,6 +160,15 @@ What the response JSON looks like:
 
 bc.. <%= service_provisioning_response_json %>
 
+h3. Updating API keys
+
+When schedulers are provisioned we save an "api_url".  We can use this URL to update our "vars".
+
+For example:
+
+bc.. POST <%= provisioned_service_update_url %>
+<%= provisioned_service_update_params %>
+
 h3. Using the provisioned Chronatog service in your app
 
 The Chronatog service has been enabled and provisioned. Values for @service_url@, @auth_username@, and @auth_password@ have been generated and sent back to EngineYard.  Now it's time to make use of the service in your  application.  Just check-in few changes to your app and deploy!

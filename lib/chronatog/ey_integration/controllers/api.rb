@@ -60,6 +60,7 @@ module Chronatog
 
           customer = Chronatog::Server::Customer.find(customer_id)
           create_params = {
+            :api_url => provisioned_service.url,
             :environment_name => provisioned_service.environment.name,
             :app_name => provisioned_service.app.name,
             :messages_url => provisioned_service.messages_url,
