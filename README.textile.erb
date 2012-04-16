@@ -162,9 +162,13 @@ bc.. <%= service_provisioning_response_json %>
 
 h3. Updating API keys
 
-When schedulers are provisioned we save an "api_url".  We can use this URL to update our "vars".
+When the scheduler was provisioned we saved the @provisioned_service.url@ into the scheduler @api_url@.  We can use this URL to update Engine Yard whenever we change vars.
 
-For example:
+For example, when we call @reset_auth!@ on a scheduler:
+
+bc.. <%= reset_auth_definition %>
+
+p. We will cause the following request:
 
 bc.. POST <%= provisioned_service_update_url %>
 <%= provisioned_service_update_params %>

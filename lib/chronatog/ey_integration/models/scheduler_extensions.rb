@@ -7,6 +7,7 @@ module Chronatog
         save!
       end
 
+#{reset_auth_definition{
       def reset_auth!
         self.auth_username = "U"+SecureRandom.hex(7)
         self.auth_password = "P"+SecureRandom.hex(13)
@@ -15,6 +16,7 @@ module Chronatog
                       "auth_password" => self.auth_password }})
         save!
       end
+#}reset_auth_definition}
 
       #TODO: make sure you can't add/remove jobs to decomissioned schedulers
 
