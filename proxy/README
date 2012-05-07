@@ -1,0 +1,27 @@
+1. start chronatog on 9292
+  cd chronatog
+  bundle
+  bundle exec rackup
+
+2. start the proxy on 9393
+  cd chronatog/proxy
+  bundle
+  bundle exec rackup
+
+3. configure BURP or other intercepting proxy
+  to forward localhost traffic:
+  8080 -> 9292
+
+4. prime the tunnel:
+  curl -v http://localhost:9393
+
+NOW:
+  curl -v http://localhost:9292
+    will hit chronatog directly and bypass all proxies
+  curl -v http://localhost:8080
+    will hit Burp and proxy to chronatog
+  curl -v http://localhost:9393
+    will hit our proxy, then go to Burp, then go to chronatog
+  curl -v ec2-50-112-49-218.us-west-2.compute.amazonaws.com
+    will hit remote host, pass through tunnel, proxy to Burp, then proxy to chronatog
+  

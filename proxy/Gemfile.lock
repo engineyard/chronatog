@@ -1,0 +1,17 @@
+GEM
+  remote: http://rubygems.org/
+  specs:
+    open4 (1.1.0)
+    rack (1.4.1)
+    rack-reverse-proxy (0.4.4)
+      rack (>= 1.0.0)
+    rack-tunnel (0.1.1)
+      open4
+      rack
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  rack-reverse-proxy
+  rack-tunnel
