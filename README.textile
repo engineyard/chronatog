@@ -32,7 +32,7 @@ Example in script/console:
 
 bc.. $ script/console
 > Chronatog::EyIntegration.save_creds('ff4d04dbea52c605', 'e301bcb647fc4e9def6dfb416722c583cf3058bc1b516ebb2ac99bccf7ff5c5ea22c112cd75afd28')
-=> #<Chronatog::EyIntegration::EyCredentials id: 1, auth_id: "ff4d04dbea52c605", auth_key: "e301bcb647fc4e9def6dfb416722c583cf3058bc1b516ebb2ac...", created_at: "2012-05-17 11:13:02", updated_at: "2012-05-17 11:13:04">
+=> #<Chronatog::EyIntegration::EyCredentials id: 1, auth_id: "ff4d04dbea52c605", auth_key: "e301bcb647fc4e9def6dfb416722c583cf3058bc1b516ebb2ac...", created_at: "2012-05-17 16:15:02", updated_at: "2012-05-17 16:15:03">
 
 h3. Test your connection
 
@@ -78,13 +78,13 @@ h3. Viewing your service on cloud.engineyard.com
 
 If your service registration succeeded, you should see it's information displayed when you visit @https://services.engineyard.com@.  From there you can enable testing of your service with any cloud account you have access to.  
 
-!https://github.com/engineyard/chronatog/raw/master/images/enable_for_testing.png!
+!https://github.com/engineyard/chronatog/raw/master/images/make_available.png!
 
 If you don't have any cloud accounts, you can create a free trial account at: @https://cloud.engineyard.com/@.
 
 Once enabled for testing, you should see your service available if you navigate to "Services" in the menu bar from @https://cloud.engineyard.com@.
 
-!https://github.com/engineyard/chronatog/raw/master/images/enable_on_account.png!
+!https://github.com/engineyard/chronatog/raw/master/images/listing.png!
 
 h3. Verifying requests from Engine Yard
 
@@ -96,7 +96,9 @@ end
 
 h3. Enabling your service
 
-When you click 'enable', EngineYard will make a call to your @service_accounts_url@ to create a service account.  In the case of Chronatog, this callback is handled by creating a customer record.
+!https://github.com/engineyard/chronatog/raw/master/images/signup.png!
+
+When you click 'Sign Up', EngineYard will make a call to your @service_accounts_url@ to create a service account.  In the case of Chronatog, this callback is handled by creating a customer record.
 
 The request will look something like this:
 
@@ -122,7 +124,7 @@ customer = Chronatog::Server::Customer.create!(create_params)
 
 p. As part of handling the callback, a @Customer@ will be created:
 
-bc.. #<Chronatog::Server::Customer id: 1, service_id: nil, name: "some-account", created_at: "2012-05-17 11:13:02", updated_at: "2012-05-17 11:13:02", api_url: "http://services.engineyard.com/api/1/partners/2/ser...", messages_url: "http://services.engineyard.com/api/1/partners/2/ser...", invoices_url: "http://services.engineyard.com/api/1/partners/2/ser...", plan_type: "freemium", last_billed_at: nil>
+bc.. #<Chronatog::Server::Customer id: 1, service_id: nil, name: "some-account", created_at: "2012-05-17 16:15:02", updated_at: "2012-05-17 16:15:02", api_url: "http://services.engineyard.com/api/1/partners/2/ser...", messages_url: "http://services.engineyard.com/api/1/partners/2/ser...", invoices_url: "http://services.engineyard.com/api/1/partners/2/ser...", plan_type: "freemium", last_billed_at: nil>
 
 p. Chronatog returns a JSON response that tells EngineYard some information about the customer.
 
@@ -169,7 +171,7 @@ bc.. https://chronatog.engineyard.com/eyintegration/sso/customers/1
 
 p. When EY signs the url it provides additional parameters, such that it looks like this:
 
-bc.. https://chronatog.engineyard.com/eyintegration/sso/customers/1?access_level=owner&ey_return_to_url=https%3A%2F%2Fcloud.engineyard.com%2Fdashboard&ey_user_id=57&ey_user_name=Person+Name&timestamp=2012-05-17T11%3A13%3A03-07%3A00&signature=AuthHMAC+123edf%3At8uXBKTfwjpit3ukB%2B8rUK0MPZA%3D
+bc.. https://chronatog.engineyard.com/eyintegration/sso/customers/1?access_level=owner&ey_return_to_url=https%3A%2F%2Fcloud.engineyard.com%2Fdashboard&ey_user_id=57&ey_user_name=Person+Name&timestamp=2012-05-17T16%3A15%3A02-07%3A00&signature=AuthHMAC+123edf%3AqhJGbPgYHXIbslk3ZC%2Bg093iJ6w%3D
 
 p. Chronatog will verify the SSO request with a before filter that looks like this:
 
@@ -189,11 +191,9 @@ end
 
 h3. Provisioning a Chronatog Scheduler
 
-With the service enabled in EngineYard cloud, it should appear available for provisioning when you drill-down in the UI to viewing a single environment within the context of a single application.
+!https://github.com/engineyard/chronatog/raw/master/images/activate.png!
 
-!https://github.com/engineyard/chronatog/raw/master/images/provision.png!
-
-Clicking "Provision" will cause EngineYard to call to your @provisioned_services_url@ to create a provisioned service.  In the case of Chronatog, this callback is handled by creating a scheduler.
+Clicking "Activate" will cause EngineYard to call to your @provisioned_services_url@ to create a provisioned service.  In the case of Chronatog, this callback is handled by creating a scheduler.
 
 The request will look something like this:
 
@@ -230,7 +230,7 @@ scheduler = customer.schedulers.create!(create_params)
 
 p. As part of handling the callback, a @Customer@ will be created:
 
-bc.. #<Chronatog::Server::Scheduler id: 1, customer_id: 1, auth_username: "U375cff0a2f2daa", auth_password: "Pa71e7daf99a031a0e01db63762", created_at: "2012-05-17 11:13:03", updated_at: "2012-05-17 11:13:03", api_url: "http://services.engineyard.com/api/1/service_accoun...", environment_name: "myenv", app_name: "myapp", messages_url: "http://services.engineyard.com/api/1/partners/112/s...", decomissioned_at: nil, usage_calls: 0>
+bc.. #<Chronatog::Server::Scheduler id: 1, customer_id: 1, auth_username: "U8cfb1fe2f2f02a", auth_password: "P92d32c2e609d0317bd49e0daa3", created_at: "2012-05-17 16:15:03", updated_at: "2012-05-17 16:15:03", api_url: "http://services.engineyard.com/api/1/service_accoun...", environment_name: "myenv", app_name: "myapp", messages_url: "http://services.engineyard.com/api/1/partners/112/s...", decomissioned_at: nil, usage_calls: 0>
 
 p. Chronatog returns a JSON response that tells EngineYard some information about the created scheduler.
 
@@ -263,8 +263,8 @@ bc.. {
     "configuration_url": null,
     "vars": {
       "service_url": "https://chronatog.engineyard.com/chronatogapi/1/jobs",
-      "auth_username": "U75bce67c7fc06c",
-      "auth_password": "P34f0d146f6854b0dcec181428f"
+      "auth_username": "U3f79b14bf49b59",
+      "auth_password": "P8e4c7e219d503234792bd2cd53"
     }
   },
   "message": {
@@ -295,8 +295,8 @@ bc.. PUT http://services.engineyard.com/api/1/service_accounts/104/provisioned_s
 {
   "provisioned_service": {
     "vars": {
-      "auth_username": "U805ef46c7f28dd",
-      "auth_password": "P87b4bf607dc1a456657522f176"
+      "auth_username": "U0f11ac4cc4b161",
+      "auth_password": "Pf54540c4bc106422f140a0457c"
     }
   }
 }
@@ -333,8 +333,8 @@ p. When you deploy, EngineYard will create @config/ey_services_config_deploy.yml
 bc.. ---
 chronatog:
   service_url: https://chronatog.engineyard.com/chronatogapi/1/jobs
-  auth_username: U82695ff596eaf4
-  auth_password: P2229f22dbb5a685f407fa15067
+  auth_username: Uca1eb4ce42725c
+  auth_password: Pdd3ca1342e1771b1bda0a5ef6b
 
 
 p. The existence of @config/ey_services_config_deploy.yml@ will override all settings in @config/ey_services_config_local.yml@.

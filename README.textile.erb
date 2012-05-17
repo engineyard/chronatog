@@ -70,13 +70,13 @@ h3. Viewing your service on cloud.engineyard.com
 
 If your service registration succeeded, you should see it's information displayed when you visit @https://services.engineyard.com@.  From there you can enable testing of your service with any cloud account you have access to.  
 
-!https://github.com/engineyard/chronatog/raw/master/images/enable_for_testing.png!
+!https://github.com/engineyard/chronatog/raw/master/images/make_available.png!
 
 If you don't have any cloud accounts, you can create a free trial account at: @https://cloud.engineyard.com/@.
 
 Once enabled for testing, you should see your service available if you navigate to "Services" in the menu bar from @https://cloud.engineyard.com@.
 
-!https://github.com/engineyard/chronatog/raw/master/images/enable_on_account.png!
+!https://github.com/engineyard/chronatog/raw/master/images/listing.png!
 
 h3. Verifying requests from Engine Yard
 
@@ -86,7 +86,9 @@ bc.. <%= hmac_middleware %>
 
 h3. Enabling your service
 
-When you click 'enable', EngineYard will make a call to your @service_accounts_url@ to create a service account.  In the case of Chronatog, this callback is handled by creating a customer record.
+!https://github.com/engineyard/chronatog/raw/master/images/signup.png!
+
+When you click 'Sign Up', EngineYard will make a call to your @service_accounts_url@ to create a service account.  In the case of Chronatog, this callback is handled by creating a customer record.
 
 The request will look something like this:
 
@@ -131,11 +133,9 @@ bc.. <%= sso_before_filter %>
 
 h3. Provisioning a Chronatog Scheduler
 
-With the service enabled in EngineYard cloud, it should appear available for provisioning when you drill-down in the UI to viewing a single environment within the context of a single application.
+!https://github.com/engineyard/chronatog/raw/master/images/activate.png!
 
-!https://github.com/engineyard/chronatog/raw/master/images/provision.png!
-
-Clicking "Provision" will cause EngineYard to call to your @provisioned_services_url@ to create a provisioned service.  In the case of Chronatog, this callback is handled by creating a scheduler.
+Clicking "Activate" will cause EngineYard to call to your @provisioned_services_url@ to create a provisioned service.  In the case of Chronatog, this callback is handled by creating a scheduler.
 
 The request will look something like this:
 

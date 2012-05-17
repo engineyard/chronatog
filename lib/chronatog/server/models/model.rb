@@ -30,6 +30,7 @@ module Chronatog
       end
       def self.inherited(klass)
         decendants << klass
+        super
       end
 
     end
