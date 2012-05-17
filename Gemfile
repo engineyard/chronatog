@@ -9,6 +9,8 @@ gem 'ey_api_hmac', "~> 0.4.4"
 
 gem 'pg' #Database for production
 
+gem 'unicorn'
+
 group :test, :development do
   #for documentation generation
   gem 'RedCloth'
