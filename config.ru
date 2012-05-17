@@ -6,6 +6,13 @@ if rails_env = ENV["RAILS_ENV"]
   CHRONOS_DB_CREDS = YAML::load_file(File.expand_path("../config/database.yml", __FILE__))[rails_env]
 end
 
+#Hax for unicorn reload script:
+class Rails
+  def self.env
+    CHRONOS_DB_CREDS
+  end
+end
+
 $:.unshift File.expand_path("../lib", __FILE__)
 require 'chronatog/ey_integration'
 
