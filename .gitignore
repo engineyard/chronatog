@@ -4,3 +4,4 @@ tmp
 config/ey_registered_service.yml
 config/ey_partner_credentials.yml
 README.html
+log/*
