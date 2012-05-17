@@ -14,7 +14,7 @@ module Chronatog
       unless ActiveRecord::Base.connected?
         ActiveRecord::Base.establish_connection(CONNECTION_ARGS)
       end
-
+      ActiveRecord::Base.connection.disable_query_cache!
 
       def self.reset!
         decendants.each do |model_class| 
