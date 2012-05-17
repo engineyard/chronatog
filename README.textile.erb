@@ -20,11 +20,15 @@ h3. Become a Partner
 
 First you need a partner account with EngineYard.  Once you have one, you should be able to login at "https://services.engineyard.com":https://services.engineyard.com.
 
+h3. Deploy Chronatog
+
+For the rest of these steps, Chronatog will need to be running somewhere with a publicly accessible url.
+
 h3. Save your credentials
 
-In Chronatog, credentials are stored in config/ey_partner_credentials.yml.
+In Chronatog, credentials are stored in the database.
 
-Example to generate this file in script/console:
+Example in script/console:
 
 bc.. $ script/console
 > <%= save_creds_call %>
@@ -45,8 +49,6 @@ p. Behind the scenes, Chronatog is calling out to @EY::ServicesAPI@.
 @list_services@ is a method on @EY::ServicesAPI::Connection@.
 
 h3. Register your services
-
-For the remainder of the setup steps, you will need to have Chronatog running somewhere with a publicly accessible url.
 
 To register your service, you make a POST request to the registration url, passing a JSON body describing your service.  Included in that description are callback URLS, so in order to generate them Chronatog needs to know it's public-facing url.
 

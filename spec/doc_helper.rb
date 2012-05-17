@@ -79,7 +79,7 @@ class DocHelper
         string.gsub!(": nil",": null")
       end
     end
-    snippets[key] = string
+    snippets[key] = string.split("\n").map{|x| x.rstrip }.join("\n")
   end
 
   def self.snippets

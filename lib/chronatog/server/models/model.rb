@@ -19,7 +19,10 @@ module Chronatog
       def self.reset!
         decendants.each do |model_class| 
           model_class.reset_column_information
-          Chronatog::Server.send(:remove_const, model_class.to_s.split("::").last.to_sym)
+          const_name = model_class.to_s.split("::").last.to_sym
+          if Chronatog::Server.const_defined?(const_name)
+            Chronatog::Server.send(:remove_const, const_name)
+          end
         end
         @decendants = []
       end

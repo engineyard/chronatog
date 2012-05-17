@@ -46,7 +46,7 @@ module Chronatog
 
     def self.create_service(registration_params, service_registration_url)
       remote_service = connection.register_service(service_registration_url, registration_params)
-      Service.write!(remote_service.url)
+      service.update_attributes!(:url => remote_service.url)
     end
 
     #############################
@@ -60,8 +60,6 @@ module Chronatog
 
     def self.teardown!
       Chronatog::Server.teardown!
-      destroy_service
-      destroy_creds
     end
 
     def self.reset!
@@ -85,36 +83,12 @@ module Chronatog
     #################################
 
     def self.api_creds
-      @creds ||= Credentials.load
+      @creds ||= EyCredentials.first || EyCredentials.create!
     end
 
     def self.save_creds(auth_id, auth_key)
-      Credentials.write!(auth_id, auth_key)
-    end
-
-    def self.destroy_creds
-      api_creds.destroy if api_creds
-      @creds = nil
-    end
-
-    class Credentials < Struct.new(:auth_id, :auth_key)
-      CONFIG_PATH = File.expand_path('../../../config/ey_partner_credentials.yml', __FILE__)
-      def self.load
-        if File.exists?(CONFIG_PATH)
-          creds = YAML.load_file(CONFIG_PATH)
-          Credentials.new(creds[:auth_id], creds[:auth_key])
-        end
-      end
-      def self.write!(auth_id, auth_key)
-        creds = Credentials.new(auth_id, auth_key)
-        File.open(CONFIG_PATH, "w") do |fp|
-          fp.write({:auth_id => creds.auth_id, :auth_key => creds.auth_key}.to_yaml)
-        end
-        creds
-      end
-      def destroy
-        FileUtils.rm_f(CONFIG_PATH)
-      end
+      api_creds.update_attributes!(:auth_id => auth_id, :auth_key => auth_key)
+      api_creds
     end
 
     #################################
@@ -122,31 +96,7 @@ module Chronatog
     #################################
 
     def self.service
-      @service ||= Service.load
-    end
-
-    def self.destroy_service
-      service.destroy if service
-      @service = nil
-    end
-
-    class Service < Struct.new(:url)
-      CONFIG_PATH = File.expand_path('../../../config/ey_registered_service.yml', __FILE__)
-      def self.load
-        if File.exists?(CONFIG_PATH)
-          Service.new(YAML.load_file(CONFIG_PATH)[:url])
-        end
-      end
-      def self.write!(url)
-        service = Service.new(url)
-        File.open(CONFIG_PATH, "w") do |fp|
-          fp.write({:url => service.url}.to_yaml)
-        end
-        service
-      end
-      def destroy
-        FileUtils.rm_f(CONFIG_PATH)
-      end
+      @service ||= EyService.first || EyService.create!
     end
 
   end
