@@ -4,13 +4,12 @@ Bundler.setup
 
 if rails_env = ENV["RAILS_ENV"]
   CHRONOS_DB_CREDS = YAML::load_file(File.expand_path("../config/database.yml", __FILE__))[rails_env]
-end
-
-#Hax for unicorn reload script:
-class Rails
-  def self.env
-    CHRONOS_DB_CREDS
-  end
+  adapter = CHRONOS_DB_CREDS['adapter']
+  username = CHRONOS_DB_CREDS['username']
+  password = CHRONOS_DB_CREDS['password']
+  host = CHRONOS_DB_CREDS['host']
+  database = CHRONOS_DB_CREDS['database']
+  ENV["DATABASE_URL"] = "#{adapter}://#{username}:#{password}@#{host}/#{database}"
 end
 
 $:.unshift File.expand_path("../lib", __FILE__)
