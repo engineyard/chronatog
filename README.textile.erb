@@ -131,7 +131,7 @@ p. Chronatog will verify the SSO request with a before filter that looks like th
 
 bc.. <%= sso_before_filter %>
 
-h3. Provisioning a Chronatog Scheduler
+h3. Activating (provisioning a Chronatog Scheduler)
 
 !https://github.com/engineyard/chronatog/raw/master/images/activate.png!
 
@@ -161,6 +161,21 @@ p. Notice @EY::ServicesAPI::Message@ in the code above.  The subject text should
 What the response JSON looks like:
 
 bc.. <%= service_provisioning_response_json %>
+
+h3. Deactivating (de-provisioning a Scheduler)
+
+!https://github.com/engineyard/chronatog/raw/master/images/deactivate.png!
+
+p. Clicking "Deactivate" will cause EngineYard to DELETE to the @url@ provided by Chronatog in the activate/provision step.  Chronatog handles the callback by destroying the appropriate scheduler.
+
+The request will look something like this:
+
+bc.. POST <%= service_deprovisioning_url %>
+<%= service_deprovisioning_params %>
+
+p. Chronatog will handle the callback with the implementation defined in the API controller:
+
+bc.. <%= service_deprovisioning %>
 
 h3. Updating API keys
 
@@ -206,6 +221,8 @@ p. The existence of @config/ey_services_config_deploy.yml@ will override all set
 h3. Disabling the Chronatog Service
 
 As amazing as our Chronatog web service is, we still need to support user's deciding they don't need it anymore and disabling it.
+
+!https://github.com/engineyard/chronatog/raw/master/images/cancel.png!
 
 When the service is disabled, EngineYard will make a DELETE call to the @url@ provided when the service account was first created.
 

@@ -42,6 +42,8 @@ describe "schedulers" do
         end
 
         it "can handle a delete" do
+          DocHelper::RequestLogger.record_next_request('service_deprovisioning_url',
+                                                       'service_deprovisioning_params')
           @mock_backend.destroy_provisioned_service
           @customer.reload
 

@@ -88,11 +88,13 @@ module Chronatog
         end
 
         delete "/customers/:customer_id/schedulers/:job_id" do |customer_id, job_id|
+#{service_deprovisioning{
           customer = Chronatog::Server::Customer.find(customer_id)
           scheduler = customer.schedulers.find(job_id)
           scheduler.decomission!
           content_type :json
           {}.to_json
+#}service_deprovisioning}
         end
 
       end
