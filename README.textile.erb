@@ -190,6 +190,17 @@ p. We will cause the following request:
 bc.. PUT <%= provisioned_service_update_url %>
 <%= provisioned_service_update_params %>
 
+h4. Configuration on activation
+
+In the example activation shown, we dint't require the user to perform any special configuration.  However, this is something that the API supports.
+
+The process would be something like this:
+
+1. Provisioning request happens and the response returns a value of "true" for "configuration_required"
+2. User get's redirected to the Chronatog to do some configuration.
+3. User completes configuration. At the same time, Chronatog would PUT to the provisioned_service url to update "configuration_required" to "false", as well as updating "vars" if needed.
+4. Chronatog redirects the user back to the Engine Yard dashboard (using "ey_return_to_url").
+
 h3. Using the provisioned Chronatog service in your app
 
 The Chronatog service has been enabled and provisioned. Values for @service_url@, @auth_username@, and @auth_password@ have been generated and sent back to EngineYard.  Now it's time to make use of the service in your  application.  Just check-in few changes to your app and deploy!
