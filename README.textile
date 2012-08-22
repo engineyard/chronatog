@@ -12,8 +12,6 @@ Chronatog is:
 # A gem for use by the internal EngineYard services API implementation, for testing. (chronatog.gemspec)
 # This document designed for helping partners get started with the EY services API. (README.textile)
 
-!https://github.com/engineyard/chronatog/raw/master/images/chronatog.jpg!
-
 h2. Getting Started: Deploying your own Chronatog
 
 h3. Become a Partner
@@ -32,7 +30,7 @@ Example in script/console:
 
 bc.. $ script/console
 > Chronatog::EyIntegration.save_creds('ff4d04dbea52c605', 'e301bcb647fc4e9def6dfb416722c583cf3058bc1b516ebb2ac99bccf7ff5c5ea22c112cd75afd28')
-=> #<Chronatog::EyIntegration::EyCredentials id: 1, auth_id: "ff4d04dbea52c605", auth_key: "e301bcb647fc4e9def6dfb416722c583cf3058bc1b516ebb2ac...", created_at: "2012-05-23 11:54:50", updated_at: "2012-05-23 11:54:54">
+=> #<Chronatog::EyIntegration::EyCredentials id: 1, auth_id: "ff4d04dbea52c605", auth_key: "e301bcb647fc4e9def6dfb416722c583cf3058bc1b516ebb2ac...", created_at: "2012-08-22 11:14:48", updated_at: "2012-08-22 11:14:51">
 
 h3. Test your connection
 
@@ -124,7 +122,7 @@ customer = Chronatog::Server::Customer.create!(create_params)
 
 p. As part of handling the callback, a @Customer@ will be created:
 
-bc.. #<Chronatog::Server::Customer id: 1, service_id: nil, name: "some-account", created_at: "2012-05-23 11:54:50", updated_at: "2012-05-23 11:54:50", api_url: "http://services.engineyard.com/api/1/partners/2/ser...", messages_url: "http://services.engineyard.com/api/1/partners/2/ser...", invoices_url: "http://services.engineyard.com/api/1/partners/2/ser...", plan_type: "freemium", last_billed_at: nil>
+bc.. #<Chronatog::Server::Customer id: 1, service_id: nil, name: "some-account", created_at: "2012-08-22 11:14:48", updated_at: "2012-08-22 11:14:48", api_url: "http://services.engineyard.com/api/1/partners/2/ser...", messages_url: "http://services.engineyard.com/api/1/partners/2/ser...", invoices_url: "http://services.engineyard.com/api/1/partners/2/ser...", plan_type: "freemium", last_billed_at: nil>
 
 p. Chronatog returns a JSON response that tells EngineYard some information about the customer.
 
@@ -171,7 +169,7 @@ bc.. https://chronatog.engineyard.com/eyintegration/sso/customers/1
 
 p. When EY signs the url it provides additional parameters, such that it looks like this:
 
-bc.. https://chronatog.engineyard.com/eyintegration/sso/customers/1?access_level=owner&ey_return_to_url=https%3A%2F%2Fcloud.engineyard.com%2Fdashboard&ey_user_id=57&ey_user_name=Person+Name&timestamp=2012-05-23T11%3A54%3A53-07%3A00&signature=AuthHMAC+123edf%3AiJ0uacvjeW63ikYfxZi3ZO3N0B4%3D
+bc.. https://chronatog.engineyard.com/eyintegration/sso/customers/1?access_level=owner&ey_return_to_url=https%3A%2F%2Fcloud.engineyard.com%2Fdashboard&ey_user_id=57&ey_user_name=Person+Name&timestamp=2012-08-22T11%3A14%3A50-07%3A00&signature=AuthHMAC+123edf%3AdQtuu3JZ5piyn4N0YDV6GwmIM3A%3D
 
 p. Chronatog will verify the SSO request with a before filter that looks like this:
 
@@ -230,7 +228,7 @@ scheduler = customer.schedulers.create!(create_params)
 
 p. As part of handling the callback, a @Customer@ will be created:
 
-bc.. #<Chronatog::Server::Scheduler id: 1, customer_id: 1, auth_username: "U07fd375dab035e", auth_password: "P6360c6430feffa29cc16ef174b", created_at: "2012-05-23 11:54:54", updated_at: "2012-05-23 11:54:54", api_url: "http://services.engineyard.com/api/1/service_accoun...", environment_name: "myenv", app_name: "myapp", messages_url: "http://services.engineyard.com/api/1/partners/112/s...", decomissioned_at: nil, usage_calls: 0>
+bc.. #<Chronatog::Server::Scheduler id: 1, customer_id: 1, auth_username: "U434828f006ba4b", auth_password: "P1f49fd4df5588a3adc5f6b18bf", created_at: "2012-08-22 11:14:51", updated_at: "2012-08-22 11:14:51", api_url: "http://services.engineyard.com/api/1/service_accoun...", environment_name: "myenv", app_name: "myapp", messages_url: "http://services.engineyard.com/api/1/partners/112/s...", decomissioned_at: nil, usage_calls: 0>
 
 p. Chronatog returns a JSON response that tells EngineYard some information about the created scheduler.
 
@@ -263,8 +261,8 @@ bc.. {
     "configuration_url": null,
     "vars": {
       "service_url": "https://chronatog.engineyard.com/chronatogapi/1/jobs",
-      "auth_username": "U2ae968ae6abedb",
-      "auth_password": "P12a8ba5e4686dc8ec3bb68ae1b"
+      "auth_username": "U57566cb822ac0c",
+      "auth_password": "P8348eec86b741dc20b78c5fe1f"
     }
   },
   "message": {
@@ -314,8 +312,8 @@ bc.. PUT http://services.engineyard.com/api/1/service_accounts/104/provisioned_s
 {
   "provisioned_service": {
     "vars": {
-      "auth_username": "Ueafc295a269f22",
-      "auth_password": "P5d080c5cc6fb3d6c9f77cfe376"
+      "auth_username": "U8367e13ec83ac8",
+      "auth_password": "Pe16b696a578e2bfddf1f07e0a2"
     }
   }
 }
@@ -363,8 +361,8 @@ p. When you deploy, EngineYard will create @config/ey_services_config_deploy.yml
 bc.. ---
 chronatog:
   service_url: https://chronatog.engineyard.com/chronatogapi/1/jobs
-  auth_username: Ufbceb990fa649a
-  auth_password: P7fac77bb596619648e33aed057
+  auth_username: U80d6f3acf1a1d5
+  auth_password: Pce213fec556cac7bee33f028f4
 
 
 p. The existence of @config/ey_services_config_deploy.yml@ will override all settings in @config/ey_services_config_local.yml@.
@@ -395,7 +393,7 @@ bc.. POST http://services.engineyard.com/api/1/partners/80/services/81/service_a
 {
   "invoice": {
     "total_amount_cents": 27,
-    "line_item_description": "For service from 2012/05/22 to 2012/05/23 includes 1 schedulers and 5 jobs run."
+    "line_item_description": "For service from 2012/08/21 to 2012/08/22 includes 1 schedulers and 5 jobs run."
   }
 }
 
