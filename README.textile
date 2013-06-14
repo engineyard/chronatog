@@ -8,15 +8,15 @@ Chronatog is:
 
 # A simple service providing basic web cron. (lib/server)
 # A ruby client implementation for the chronatog.engineyard.com web service. (lib/client, chronatog-client.gemspec)
-# An example service demonstrating how to integrate with the EngineYard services API. (lib/ey_integration)
+# An example Add-on service demonstrating how to integrate with the EngineYard Add-on API. (lib/ey_integration)
 # A gem for use by the internal EngineYard services API implementation, for testing. (chronatog.gemspec)
-# This document designed for helping partners get started with the EY services API. (README.textile)
+# This document designed for helping partners get started with the EY Add-on API. (README.textile)
 
 h2. Getting Started: Deploying your own Chronatog
 
 h3. Become a Partner
 
-First you need a partner account with EngineYard.  Once you have one, you should be able to login at "https://services.engineyard.com":https://services.engineyard.com.
+First you need an Engine Yard Add-on partner account.  Once you have one, you can access "https://services.engineyard.com":https://services.engineyard.com.
 
 h3. Deploy Chronatog
 
@@ -46,9 +46,9 @@ p. Behind the scenes, Chronatog is calling out to @EY::ServicesAPI@.
 
 @list_services@ is a method on @EY::ServicesAPI::Connection@.
 
-h3. Register your services
+h3. Register your Add-on services
 
-To register your service, you make a POST request to the registration url, passing a JSON body describing your service.  Included in that description are callback URLS, so in order to generate them Chronatog needs to know it's public-facing url.
+To register your Add-on service, you make a POST request to the registration url, passing a JSON body describing your Add-on service.  Included in that description are callback URLS, so in order to generate them Chronatog needs to know it's public-facing url.
 
 Example:
 
@@ -58,7 +58,7 @@ bc.. $ script/console
 > registered_service = Chronatog::EyIntegration.register_service(registration_url, chronatog_url)
 => true
 
-p. Behind the scene, Chronatog is calling @register_service@ on a @EY::ServicesAPI::Connection@.  The first parameter is the @registration_url@. The second parameter is a hash describing the service being registered.
+p. Behind the scene, Chronatog is calling @register_service@ on a @EY::ServicesAPI::Connection@.  The first parameter is the @registration_url@. The second parameter is a hash describing the Add-on service being registered.
 
 In the case of this example it looks something like:
 
@@ -72,15 +72,13 @@ bc.. {
   :vars                     => ["service_url", "auth_username", "auth_password"]
 } 
 
-h3. Viewing your service on cloud.engineyard.com
+h3. Viewing your Add-on service on cloud.engineyard.com
 
-If your service registration succeeded, you should see it's information displayed when you visit @https://services.engineyard.com@.  From there you can enable testing of your service with any cloud account you have access to.  
+If your Add-on service registration succeeded, you should see it's information displayed when you visit @https://services.engineyard.com@.  From there you can enable testing of your Add-on service with your Engine Yard Cloud Add-on account.
 
 !https://github.com/engineyard/chronatog/raw/master/images/make_available.png!
 
-If you don't have any cloud accounts, you can create a free trial account at: @https://cloud.engineyard.com/@.
-
-Once enabled for testing, you should see your service available if you navigate to "Services" in the menu bar from @https://cloud.engineyard.com@.
+Once enabled for testing, you should see your Add-on service available if you navigate to "Add-ons" in the menu bar from @https://cloud.engineyard.com@ (or visit @https://cloud.engineyard.com/addons@).
 
 !https://github.com/engineyard/chronatog/raw/master/images/listing.png!
 
