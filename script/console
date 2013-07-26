@@ -1,4 +1,5 @@
 #!/usr/bin/env ruby
+require 'yaml'
 require 'rubygems'
 require 'bundler'
 Bundler.require
